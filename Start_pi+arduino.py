@@ -4,7 +4,9 @@ import cv2
 import numpy as np
 from pyfirmata2 import Arduino, util
 
-board = Arduino("/dev/tty.usbserial-1421430")
+# board = Arduino("/dev/tty.usbserial-1421430")
+board = Arduino("/dev/ttyUSB0")
+
 led_pin = 13  # Пин для светодиода
 relay_pin = 3  # Пин для реле
 
