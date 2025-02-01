@@ -242,7 +242,7 @@ def main():
         # Управляем светодиодом на ардуино и форсункой
         board.digital[led_pin].write(green_detected)  # Переключаем светодиод
         board.digital[relay_pin].write(not spray_active)  # Переключаем форсунку
-        print(green_detected + spray_active)
+        print(str(green_detected) + "   " + str(spray_active))
 
         # Добавление текста и статуса
         draw_text_with_background(
