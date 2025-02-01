@@ -1,7 +1,8 @@
 from pyfirmata2 import Arduino, util
 import time
 
-board = Arduino("/dev/tty.usbserial-1421430")
+# board = Arduino("/dev/tty.usbserial-1421430")
+board = Arduino("/dev/ttyUSB0")
 
 led_pin = 13  # Пин для светодиода
 relay_pin = 3  # Пин для светодиода
