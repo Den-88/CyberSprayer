@@ -4,6 +4,7 @@ import time
 import cv2
 import numpy as np
 from pyfirmata2 import Arduino, util
+from pynput import keyboard
 
 # board = Arduino("/dev/tty.usbserial-1421430")
 board = Arduino("/dev/ttyUSB0")
@@ -155,8 +156,13 @@ def main():
         # cv2.imshow("Green Color Detection", frame)
 
         # Проверка нажатия клавиши 'q' для выхода
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord("q"):
+        # key = cv2.waitKey(1) & 0xFF
+        # if key == ord("q"):
+        #     running = False
+
+        # Проверка нажатия клавиши 'q' для выхода
+        if keyboard.is_pressed('q'):  # Выход при нажатии 'q'
+            print("Выход из программы...")
             running = False
         #
         end_time = time.time()
