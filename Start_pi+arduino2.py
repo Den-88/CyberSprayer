@@ -76,7 +76,7 @@ def main():
         frame = capture_frame(rtsp_url)
         if frame is None:
             print("Не удалось захватить кадр.")
-            time.sleep(0.1)  # Немного подождём перед повторной попыткой
+            # time.sleep(0.1)  # Немного подождём перед повторной попыткой
             continue
 
         # Обработка кадра
