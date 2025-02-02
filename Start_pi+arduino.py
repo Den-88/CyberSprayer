@@ -101,58 +101,58 @@ def main():
         board.digital[relay_pin].write(not spray_active)  # Переключаем форсунку
         print(f"Green ratio: {green_ratio:.6f}, Detected: {green_detected}, Spray: {spray_active}")
 
-        # Добавление текста и статуса
-        draw_text_with_background(
-            frame,
-            f"GREEN: {green_ratio * 100:.2f}%",
-            (10, 30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (255, 255, 255),
-            2,
-            (0, 0, 0),
-        )
-
-        spray_status = "Spray: ON" if spray_active else "Spray: OFF"
-        spray_color = (0, 255, 0) if spray_active else (0, 0, 255)
-        draw_text_with_background(
-            frame,
-            spray_status,
-            (10, 140),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            spray_color,
-            2,
-            (0, 0, 0),
-            alpha=0.5
-        )
-
-        # Отображение результата
-        if green_detected:
-            draw_text_with_background(
-                frame,
-                "Green detected!",
-                (10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0),
-                2,
-                (0, 0, 0),
-            )
-        else:
-            draw_text_with_background(
-                frame,
-                f"No green detected!",
-                (10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
-
-        # Показ кадра
-        cv2.imshow("Green Color Detection", frame)
+        # # Добавление текста и статуса
+        # draw_text_with_background(
+        #     frame,
+        #     f"GREEN: {green_ratio * 100:.2f}%",
+        #     (10, 30),
+        #     cv2.FONT_HERSHEY_SIMPLEX,
+        #     1,
+        #     (255, 255, 255),
+        #     2,
+        #     (0, 0, 0),
+        # )
+        #
+        # spray_status = "Spray: ON" if spray_active else "Spray: OFF"
+        # spray_color = (0, 255, 0) if spray_active else (0, 0, 255)
+        # draw_text_with_background(
+        #     frame,
+        #     spray_status,
+        #     (10, 140),
+        #     cv2.FONT_HERSHEY_SIMPLEX,
+        #     1,
+        #     spray_color,
+        #     2,
+        #     (0, 0, 0),
+        #     alpha=0.5
+        # )
+        #
+        # # Отображение результата
+        # if green_detected:
+        #     draw_text_with_background(
+        #         frame,
+        #         "Green detected!",
+        #         (10, 70),
+        #         cv2.FONT_HERSHEY_SIMPLEX,
+        #         1,
+        #         (0, 255, 0),
+        #         2,
+        #         (0, 0, 0),
+        #     )
+        # else:
+        #     draw_text_with_background(
+        #         frame,
+        #         f"No green detected!",
+        #         (10, 70),
+        #         cv2.FONT_HERSHEY_SIMPLEX,
+        #         1,
+        #         (0, 0, 255),
+        #         2,
+        #         (0, 0, 0),
+        #     )
+        #
+        # # Показ кадра
+        # cv2.imshow("Green Color Detection", frame)
 
         # Проверка нажатия клавиши 'q' для выхода
         key = cv2.waitKey(1) & 0xFF
