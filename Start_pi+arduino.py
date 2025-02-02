@@ -155,15 +155,15 @@ def main():
         # cv2.imshow("Green Color Detection", frame)
 
         # Проверка нажатия клавиши 'q' для выхода
-        key = cv2.waitKey(1) & 0xFF
-        if key == ord("q"):
-            running = False
+        # key = cv2.waitKey(1) & 0xFF
+        # if key == ord("q"):
+        #     running = False
+        #
+        # end_time = time.time()
+        # print(f"Frame processed in {end_time - start_time:.4f} seconds")
 
-        end_time = time.time()
-        print(f"Frame processed in {end_time - start_time:.4f} seconds")
-
-    capture_thread.stop()
-    cv2.destroyAllWindows()
+    # capture_thread.stop()
+    # cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
