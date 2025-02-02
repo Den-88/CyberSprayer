@@ -105,7 +105,7 @@ def main():
         # Логика работы форсунки
         if green_detected:
             spray_active = True
-            spray_end_time = current_time + 1  # Установить таймер на 1 секунду после обнаружения
+            spray_end_time = current_time + 0.5  # Установить таймер на 1 секунду после обнаружения
         elif current_time > spray_end_time:
             spray_active = False
 
