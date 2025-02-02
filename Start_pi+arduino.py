@@ -4,7 +4,8 @@ import time
 import cv2
 import numpy as np
 from pyfirmata2 import Arduino, util
-import curses
+import signal
+import sys
 
 # board = Arduino("/dev/tty.usbserial-1421430")
 board = Arduino("/dev/ttyUSB0")
@@ -65,13 +66,15 @@ class FrameCaptureThread(threading.Thread):
         with self.lock:
             return self.frame
 
+# Функция для корректного завершения программы
+def signal_handler(sig, frame):
+    print("Программа завершена.")
+    cv2.destroyAllWindows()
+    sys.exit(0)
+
 
 # Запуск анализа видео из RTSP потока
-def main(stdscr):
-
-    curses.curs_set(0)  # Скрыть курсор
-    stdscr.nodelay(1)  # Не блокировать выполнение программы
-
+def main():
     rtsp_url = "rtsp://192.168.1.203:8554/profile0"
 
     # Запуск потока захвата
@@ -159,27 +162,20 @@ def main(stdscr):
         # # Показ кадра
         # cv2.imshow("Green Color Detection", frame)
 
-        # Проверка нажатия клавиши 'q' для выхода
-        # key = cv2.waitKey(1) & 0xFF
-        # if key == ord("q"):
-        #     running = False
-
-        # Проверка нажатия клавиши 'q' для выхода
-        key = stdscr.getch()  # Получить клавишу
-        if key == ord('q'):
-
-        # if keyboard.is_pressed('q'):  # Выход при нажатии 'q'
-            print("Выход из программы...")
-            running = False
-        #
-        end_time = time.time()
-        print(f"Frame processed in {end_time - start_time:.4f} seconds")
-
-    capture_thread.stop()
-    cv2.destroyAllWindows()
+    #     # Проверка нажатия клавиши 'q' для выхода
+    #     key = cv2.waitKey(1) & 0xFF
+    #     if key == ord("q"):
+    #         running = False
+    #
+    #     #
+    #     end_time = time.time()
+    #     print(f"Frame processed in {end_time - start_time:.4f} seconds")
+    #
+    # capture_thread.stop()
+    # cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
-    # main()
-    curses.wrapper(main)
-
+    # Устанавливаем обработчик сигнала для корректного завершения программы
+    signal.signal(signal.SIGINT, signal_handler)
+    main()
