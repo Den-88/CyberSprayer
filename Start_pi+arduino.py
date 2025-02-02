@@ -46,14 +46,8 @@ class FrameCaptureThread(threading.Thread):
         #     f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
         #     cv2.CAP_GSTREAMER
         # )
-
-        """Захват кадров с минимальной задержкой."""
-        self.cap = cv2.VideoCapture(
-            f"rtspsrc location={rtsp_url} protocols=tcp latency=1 ! "
-            f"rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink "
-            f"max-queue-size=1",  # Параметры буфера и очереди
-            cv2.CAP_GSTREAMER
-        )
+        rtsp_url = "rtsp://192.168.0.17:8554/profile0"
+        self.cap = cv2.VideoCapture(rtsp_url)
 
         self.frame = None
         self.lock = threading.Lock()
