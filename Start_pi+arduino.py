@@ -72,9 +72,6 @@ def signal_handler(sig, frame, running):
     cv2.destroyAllWindows()
     running[0] = False  # Устанавливаем флаг завершения программы
 
-    # Устанавливаем обработчик сигнала для корректного завершения программы
-    signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(sig, frame, running))
-
 # Запуск анализа видео из RTSP потока
 def main():
     rtsp_url = "rtsp://192.168.1.203:8554/profile0"
@@ -86,6 +83,9 @@ def main():
     spray_active = False
     spray_end_time = 0
     running = [True]
+
+    # Устанавливаем обработчик сигнала для корректного завершения программы
+    signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(sig, frame, running))
 
     while running[0]:
         start_time = time.time()
