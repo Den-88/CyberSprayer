@@ -5,13 +5,13 @@ import numpy as np
 from pyfirmata2 import Arduino
 import signal
 import sys
-from queue import Queue
 
 # board = Arduino("/dev/tty.usbserial-1421430")
 board = Arduino("/dev/ttyUSB0")
 
 led_pin = 13  # Пин для светодиода
 relay_pin = 3  # Пин для реле
+
 
 def detect_green(frame):
     """Функция для обнаружения зеленых пикселей в кадре."""
@@ -25,90 +25,72 @@ def detect_green(frame):
     green_ratio = green_pixels / total_pixels
     return green_ratio > 0.005, green_ratio  # Порог: 0.5% зелёных пикселей
 
-class FrameCaptureThread(threading.Thread):
-    """Параллельный поток для захвата кадров."""
-    def __init__(self, rtsp_url, frame_rate=30, frame_queue=None):
-        threading.Thread.__init__(self)
-        self.cap = cv2.VideoCapture(
-            f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
-            cv2.CAP_GSTREAMER
-        )
-        self.frame_queue = frame_queue  # Очередь для кадров
-        self.frame_rate = frame_rate  # Число кадров в секунду
-        self.running = True
 
-    def run(self):
-        """Запуск потока захвата кадров."""
-        while self.running:
-            ret, frame = self.cap.read()
-            if ret and self.frame_queue.qsize() < 5:  # Ограничиваем размер очереди
-                self.frame_queue.put(frame)
+def capture_frame(rtsp_url):
+    """Захват кадров с минимальной задержкой."""
+    cap = cv2.VideoCapture(
+        f"rtspsrc location={rtsp_url} protocols=tcp latency=1 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
+        cv2.CAP_GSTREAMER
+    )
 
-    def stop(self):
-        """Остановить поток захвата кадров."""
-        self.running = False
-        self.cap.release()
+    if not cap.isOpened():
+        print("Не удалось открыть поток RTSP.")
+        return None
 
-class FrameProcessingThread(threading.Thread):
-    """Параллельный поток для обработки кадров."""
-    def __init__(self, frame_queue):
-        threading.Thread.__init__(self)
-        self.frame_queue = frame_queue  # Очередь для кадров
+    # Захват кадра без накопления
+    ret, frame = cap.read()
+    cap.release()
 
-    def run(self):
-        """Запуск потока обработки кадров."""
+    if ret:
+        return frame
+    else:
+        return None
+
+
+def process_frame(frame):
+    """Обработка кадра для обнаружения зелёных пикселей."""
+    green_detected, green_ratio = detect_green(frame)
+
+    # Логика работы форсунки
+    spray_active = False
+    spray_end_time = time.time() + 1  # Таймер на 1 секунду после обнаружения
+    if green_detected:
+        spray_active = True
+    elif time.time() > spray_end_time:
         spray_active = False
-        spray_end_time = 0
-        while True:
-            if not self.frame_queue.empty():
-                frame = self.frame_queue.get()  # Получаем кадр из очереди
 
-                # Обработка кадра для обнаружения зелёных пикселей
-                green_detected, green_ratio = detect_green(frame)
+    # Управление светодиодом и форсункой
+    board.digital[led_pin].write(green_detected)  # Переключаем светодиод
+    board.digital[relay_pin].write(not spray_active)  # Переключаем форсунку
 
-                # Логика работы форсунки
-                current_time = time.time()
-                if green_detected:
-                    spray_active = True
-                    spray_end_time = current_time + 1  # Установить таймер на 1 секунду после обнаружения
-                elif current_time > spray_end_time:
-                    spray_active = False
+    # Выводим информацию
+    print(f"Green ratio: {green_ratio:.6f}, Detected: {green_detected}, Spray: {spray_active}")
 
-                # Управление светодиодом и форсункой
-                board.digital[led_pin].write(green_detected)  # Переключаем светодиод
-                board.digital[relay_pin].write(not spray_active)  # Переключаем форсунку
-
-                # Выводим информацию
-                print(f"Green ratio: {green_ratio:.6f}, Detected: {green_detected}, Spray: {spray_active}")
-
-            time.sleep(0.01)  # Небольшая задержка для предотвращения излишней загрузки процессора
-
-# Функция для корректного завершения программы
-def signal_handler(sig, frame):
-    """Обработчик сигнала для корректного завершения программы."""
-    print("Программа завершена.")
-    cv2.destroyAllWindows()
-    sys.exit(0)  # Выход из программы
 
 def main():
     rtsp_url = "rtsp://192.168.1.203:8554/profile0"  # Укажите ваш RTSP URL
+    running = True
 
-    # Очередь для кадров
-    frame_queue = Queue(maxsize=5)
+    while running:
+        # Захват кадра с минимальной задержкой
+        frame = capture_frame(rtsp_url)
+        if frame is None:
+            print("Не удалось захватить кадр.")
+            time.sleep(0.1)  # Немного подождём перед повторной попыткой
+            continue
 
-    # Запуск потоков
-    capture_thread = FrameCaptureThread(rtsp_url, frame_queue=frame_queue)
-    capture_thread.start()
+        # Обработка кадра
+        process_frame(frame)
 
-    processing_thread = FrameProcessingThread(frame_queue=frame_queue)
-    processing_thread.start()
+        # Проверка нажатия клавиши 'q' для выхода
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"):
+            running = False
 
-    # Устанавливаем обработчик сигнала для корректного завершения программы
-    signal.signal(signal.SIGINT, signal_handler)
+    print("Завершение программы.")
 
-    # Блокируем основной поток (он только для завершения программы)
-    capture_thread.join()
-    processing_thread.join()
 
 if __name__ == "__main__":
+    # Устанавливаем обработчик сигнала для корректного завершения программы
+    signal.signal(signal.SIGINT, lambda sig, frame: sys.exit(0))
     main()
