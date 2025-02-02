@@ -29,9 +29,7 @@ def detect_green(frame):
 def capture_frame(rtsp_url):
     """Захват кадров с минимальной задержкой."""
     cap = cv2.VideoCapture(
-        f"rtspsrc location={rtsp_url} protocols=tcp latency=1 ! "
-        f"rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink "
-        f"buffer-size=1000000 max-queue-size=1",  # Параметры буфера и очереди
+        f"rtspsrc location={rtsp_url} protocols=tcp latency=1 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
         cv2.CAP_GSTREAMER
     )
 

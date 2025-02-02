@@ -42,10 +42,19 @@ def detect_green(frame):
 class FrameCaptureThread(threading.Thread):
     def __init__(self, rtsp_url):
         threading.Thread.__init__(self)
+        # self.cap = cv2.VideoCapture(
+        #     f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
+        #     cv2.CAP_GSTREAMER
+        # )
+
+        """Захват кадров с минимальной задержкой."""
         self.cap = cv2.VideoCapture(
-            f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
+            f"rtspsrc location={rtsp_url} protocols=tcp latency=1 ! "
+            f"rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink "
+            f"buffer-size=1000000 max-queue-size=1",  # Параметры буфера и очереди
             cv2.CAP_GSTREAMER
         )
+
         self.frame = None
         self.lock = threading.Lock()
         self.running = True
