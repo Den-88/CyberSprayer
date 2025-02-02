@@ -26,16 +26,16 @@ def detect_green(frame):
 
 
 # Функция для добавления текста с фоном на изображение
-def draw_text_with_background(frame, text, position, font, scale, color, thickness, bg_color, alpha=0.5):
-    text_size, _ = cv2.getTextSize(text, font, scale, thickness)
-    text_w, text_h = text_size
-    x, y = position
-    bg_x1, bg_y1 = x - 5, y - text_h - 5
-    bg_x2, bg_y2 = x + text_w + 5, y + 5
-    overlay = frame.copy()
-    cv2.rectangle(overlay, (bg_x1, bg_y1), (bg_x2, bg_y2), bg_color, -1)
-    cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
-    cv2.putText(frame, text, (x, y), font, scale, color, thickness)
+# def draw_text_with_background(frame, text, position, font, scale, color, thickness, bg_color, alpha=0.5):
+#     text_size, _ = cv2.getTextSize(text, font, scale, thickness)
+#     text_w, text_h = text_size
+#     x, y = position
+#     bg_x1, bg_y1 = x - 5, y - text_h - 5
+#     bg_x2, bg_y2 = x + text_w + 5, y + 5
+#     overlay = frame.copy()
+#     cv2.rectangle(overlay, (bg_x1, bg_y1), (bg_x2, bg_y2), bg_color, -1)
+#     cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+#     cv2.putText(frame, text, (x, y), font, scale, color, thickness)
 
 
 # Параллельный поток для захвата кадров
@@ -56,7 +56,7 @@ class FrameCaptureThread(threading.Thread):
             if ret:
                 with self.lock:
                     self.frame = frame
-            # time.sleep(0.01)
+            time.sleep(0.01)
 
     def stop(self):
         self.running = False
