@@ -22,5 +22,8 @@ time.sleep(1)
 board.digital[led_pin].write(0)  # Выключить
 board.digital[relay_pin].write(0)  # Выключить
 
+time.sleep(1)
+board.digital[led_pin].write(1)  # Включить
+board.digital[relay_pin].write(1)  # Включить
 
 board.exit()
