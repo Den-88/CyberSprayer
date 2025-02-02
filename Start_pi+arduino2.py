@@ -36,16 +36,19 @@ class FrameCaptureThread(threading.Thread):
         self.running = True
         self.frame_rate = frame_rate  # Число кадров в секунду
         self.last_capture_time = 0  # Время последнего захвата кадра
+        self.processing_frame = False  # Флаг для проверки, обрабатывается ли кадр
 
     def run(self):
         while self.running:
-            current_time = time.time()
-            if current_time - self.last_capture_time >= 1.0 / self.frame_rate:
-                ret, frame = self.cap.read()
-                if ret:
-                    with self.lock:
-                        self.frame = frame
-                    self.last_capture_time = current_time
+            if not self.processing_frame:  # Если кадр не обрабатывается
+                current_time = time.time()
+                if current_time - self.last_capture_time >= 1.0 / self.frame_rate:
+                    ret, frame = self.cap.read()
+                    if ret:
+                        with self.lock:
+                            self.frame = frame
+                        self.last_capture_time = current_time
+                        self.processing_frame = True  # Устанавливаем флаг обработки кадра
 
     def stop(self):
         self.running = False
@@ -54,6 +57,10 @@ class FrameCaptureThread(threading.Thread):
     def get_frame(self):
         with self.lock:
             return self.frame
+
+    def frame_processed(self):
+        """Устанавливаем флаг, что кадр обработан"""
+        self.processing_frame = False
 
 # Функция для корректного завершения программы
 def signal_handler(sig, frame):
@@ -96,6 +103,9 @@ def main():
         board.digital[led_pin].write(green_detected)  # Переключаем светодиод
         board.digital[relay_pin].write(not spray_active)  # Переключаем форсунку
         print(f"Green ratio: {green_ratio:.6f}, Detected: {green_detected}, Spray: {spray_active}")
+
+        # Обработка кадра завершена, сбрасываем флаг
+        capture_thread.frame_processed()
 
         end_time = time.time()
         print(f"Frame processed in {end_time - start_time:.4f} seconds")
