@@ -13,6 +13,7 @@ led_pin = 13  # Пин для светодиода
 relay_pin = 3  # Пин для реле
 
 def detect_green(frame):
+    """Функция для обнаружения зеленых пикселей в кадре."""
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     lower_green = np.array([35, 40, 40])  # Нижняя граница
     upper_green = np.array([85, 255, 255])  # Верхняя граница
@@ -23,8 +24,8 @@ def detect_green(frame):
     green_ratio = green_pixels / total_pixels
     return green_ratio > 0.005, green_ratio  # Порог: 0.5% зелёных пикселей
 
-# Параллельный поток для захвата кадров
 class FrameCaptureThread(threading.Thread):
+    """Параллельный поток для захвата кадров."""
     def __init__(self, rtsp_url, frame_rate=30):
         threading.Thread.__init__(self)
         self.cap = cv2.VideoCapture(
@@ -36,41 +37,37 @@ class FrameCaptureThread(threading.Thread):
         self.running = True
         self.frame_rate = frame_rate  # Число кадров в секунду
         self.last_capture_time = 0  # Время последнего захвата кадра
-        self.processing_frame = False  # Флаг для проверки, обрабатывается ли кадр
 
     def run(self):
+        """Запуск потока захвата кадров."""
         while self.running:
-            if not self.processing_frame:  # Если кадр не обрабатывается
-                current_time = time.time()
-                if current_time - self.last_capture_time >= 1.0 / self.frame_rate:
-                    ret, frame = self.cap.read()
-                    if ret:
-                        with self.lock:
-                            self.frame = frame
-                        self.last_capture_time = current_time
-                        self.processing_frame = True  # Устанавливаем флаг обработки кадра
+            current_time = time.time()
+            if current_time - self.last_capture_time >= 1.0 / self.frame_rate:
+                ret, frame = self.cap.read()
+                if ret:
+                    with self.lock:
+                        self.frame = frame
+                    self.last_capture_time = current_time
 
     def stop(self):
+        """Остановить поток захвата кадров."""
         self.running = False
         self.cap.release()
 
     def get_frame(self):
+        """Получить текущий кадр из потока."""
         with self.lock:
             return self.frame
 
-    def frame_processed(self):
-        """Устанавливаем флаг, что кадр обработан"""
-        self.processing_frame = False
-
 # Функция для корректного завершения программы
 def signal_handler(sig, frame):
+    """Обработчик сигнала для корректного завершения программы."""
     print("Программа завершена.")
     cv2.destroyAllWindows()
     sys.exit(0)  # Выход из программы
 
-# Запуск анализа видео из RTSP потока
 def main():
-    rtsp_url = "rtsp://192.168.1.203:8554/profile0"
+    rtsp_url = "rtsp://192.168.1.203:8554/profile0"  # Укажите ваш RTSP URL
 
     # Запуск потока захвата
     capture_thread = FrameCaptureThread(rtsp_url)
@@ -88,31 +85,34 @@ def main():
         if frame is None:
             continue
 
+        # Обработка кадра для обнаружения зелёных пикселей
         green_detected, green_ratio = detect_green(frame)
 
-        current_time = time.time()
-
         # Логика работы форсунки
+        current_time = time.time()
         if green_detected:
             spray_active = True
             spray_end_time = current_time + 1  # Установить таймер на 1 секунду после обнаружения
         elif current_time > spray_end_time:
             spray_active = False
 
-        # Управляем светодиодом на ардуино и форсункой
+        # Управление светодиодом и форсункой
         board.digital[led_pin].write(green_detected)  # Переключаем светодиод
         board.digital[relay_pin].write(not spray_active)  # Переключаем форсунку
+
+        # Выводим информацию
         print(f"Green ratio: {green_ratio:.6f}, Detected: {green_detected}, Spray: {spray_active}")
 
-        # Обработка кадра завершена, сбрасываем флаг
-        capture_thread.frame_processed()
-
+        # Добавляем небольшую задержку, чтобы избежать чрезмерного захвата кадров
         end_time = time.time()
         print(f"Frame processed in {end_time - start_time:.4f} seconds")
 
+        # Пауза для стабилизации скорости захвата
+        time.sleep(0.01)
+
+    # Остановка потока захвата и завершение программы
     capture_thread.stop()
     cv2.destroyAllWindows()
-
 
 if __name__ == "__main__":
     # Устанавливаем обработчик сигнала для корректного завершения программы
