@@ -67,11 +67,13 @@ class FrameCaptureThread(threading.Thread):
             return self.frame
 
 # Функция для корректного завершения программы
-def signal_handler(sig, frame):
+def signal_handler(sig, frame, running):
     print("Программа завершена.")
     cv2.destroyAllWindows()
-    sys.exit(0)
+    running[0] = False  # Устанавливаем флаг завершения программы
 
+    # Устанавливаем обработчик сигнала для корректного завершения программы
+    signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(sig, frame, running))
 
 # Запуск анализа видео из RTSP потока
 def main():
@@ -83,9 +85,9 @@ def main():
 
     spray_active = False
     spray_end_time = 0
-    running = True
+    running = [True]
 
-    while running:
+    while running[0]:
         start_time = time.time()
 
         # Получаем кадр из потока
@@ -168,8 +170,8 @@ def main():
     #         running = False
     #
     #     #
-    #     end_time = time.time()
-    #     print(f"Frame processed in {end_time - start_time:.4f} seconds")
+        end_time = time.time()
+        print(f"Frame processed in {end_time - start_time:.4f} seconds")
     #
     # capture_thread.stop()
     # cv2.destroyAllWindows()
