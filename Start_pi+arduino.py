@@ -4,7 +4,7 @@ import time
 import cv2
 import numpy as np
 from pyfirmata2 import Arduino, util
-from pynput import keyboard
+import curses
 
 # board = Arduino("/dev/tty.usbserial-1421430")
 board = Arduino("/dev/ttyUSB0")
@@ -67,7 +67,11 @@ class FrameCaptureThread(threading.Thread):
 
 
 # Запуск анализа видео из RTSP потока
-def main():
+def main(stdscr):
+
+    curses.curs_set(0)  # Скрыть курсор
+    stdscr.nodelay(1)  # Не блокировать выполнение программы
+
     rtsp_url = "rtsp://192.168.1.203:8554/profile0"
 
     # Запуск потока захвата
@@ -161,7 +165,10 @@ def main():
         #     running = False
 
         # Проверка нажатия клавиши 'q' для выхода
-        if keyboard.is_pressed('q'):  # Выход при нажатии 'q'
+        key = stdscr.getch()  # Получить клавишу
+        if key == ord('q'):
+
+        # if keyboard.is_pressed('q'):  # Выход при нажатии 'q'
             print("Выход из программы...")
             running = False
         #
@@ -173,4 +180,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    curses.wrapper(main)
+
