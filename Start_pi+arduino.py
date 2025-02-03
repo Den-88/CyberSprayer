@@ -15,14 +15,14 @@ relay_pin = 2  # Пин для реле
 
 def detect_green(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 70, 40])  # Нижняя граница
+    lower_green = np.array([35, 30, 40])  # Нижняя граница
     upper_green = np.array([85, 255, 255])  # Верхняя граница
     mask = cv2.inRange(hsv, lower_green, upper_green)
     green_pixels = cv2.countNonZero(mask)
     height, width = frame.shape[:2]
     total_pixels = height * width
     green_ratio = green_pixels / total_pixels
-    return green_ratio > 0.000035, green_ratio  # Порог: 1.0% зелёных пикселей
+    return green_ratio > 0.00025, green_ratio  # Порог: 1.0% зелёных пикселей
 
 
 # Функция для добавления текста с фоном на изображение
