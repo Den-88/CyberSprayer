@@ -22,7 +22,7 @@ def detect_green(frame):
     height, width = frame.shape[:2]
     total_pixels = height * width
     green_ratio = green_pixels / total_pixels
-    return green_ratio > 0.0010, green_ratio  # Порог: 1.0% зелёных пикселей
+    return green_ratio > 0.0040, green_ratio  # Порог: 1.0% зелёных пикселей
 
 
 # Функция для добавления текста с фоном на изображение
