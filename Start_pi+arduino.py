@@ -15,7 +15,7 @@ relay_pin = 2  # Пин для реле
 
 def detect_green(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 40, 40])  # Нижняя граница
+    lower_green = np.array([35, 10, 40])  # Нижняя граница
     upper_green = np.array([85, 255, 255])  # Верхняя граница
     mask = cv2.inRange(hsv, lower_green, upper_green)
     green_pixels = cv2.countNonZero(mask)
