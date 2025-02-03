@@ -11,7 +11,7 @@ import sys
 board = Arduino("/dev/ttyUSB0")
 
 led_pin = 13  # Пин для светодиода
-relay_pin = 3  # Пин для реле
+relay_pin = 2  # Пин для реле
 
 def detect_green(frame):
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -105,7 +105,7 @@ def main():
         # Логика работы форсунки
         if green_detected:
             spray_active = True
-            spray_end_time = current_time + 0.5  # Установить таймер на 1 секунду после обнаружения
+            spray_end_time = current_time + 0.3  # Установить таймер на 1 секунду после обнаружения
         elif current_time > spray_end_time:
             spray_active = False
 
