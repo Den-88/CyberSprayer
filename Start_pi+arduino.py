@@ -16,6 +16,9 @@ led_pin = 13  # Пин для светодиода
 relay_pin = 2  # Пин для реле
 
 def detect_green(frame):
+    if frame is None:
+        return False, 0  # Если кадра нет, ничего не делать
+
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     lower_green = np.array([35, 30, 40])  # Нижняя граница
     upper_green = np.array([85, 255, 255])  # Верхняя граница
@@ -78,8 +81,12 @@ def signal_handler(sig, frame):
     print("Программа завершена.")
 
     running = False  # Останавливаем главный цикл
-    capture_thread.stop()  # Останавливаем поток захвата
-    out.release()  # Освобождаем запись видео
+
+    if capture_thread:
+        capture_thread.stop()  # Останавливаем поток
+    if out:
+        out.release()  # Закрываем видео-поток
+
     cv2.destroyAllWindows()  # Закрываем окна OpenCV
 
     sys.exit(0)  # Выход из программы
@@ -87,6 +94,8 @@ def signal_handler(sig, frame):
 
 # Запуск анализа видео из RTSP потока
 def main():
+    global running, capture_thread, out
+
     rtsp_url = "rtsp://192.168.1.203:8555/profile0"
 
     # Запуск потока захвата
@@ -96,7 +105,6 @@ def main():
     spray_active = False
     spray_end_time = 0
 
-    global running
     running = True
 
     # Устанавливаем обработчик сигнала для корректного завершения программы
