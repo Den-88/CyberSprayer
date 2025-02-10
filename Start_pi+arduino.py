@@ -51,7 +51,7 @@ class FrameCaptureThread(threading.Thread):
         #     f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
         #     cv2.CAP_GSTREAMER
         # )
-        # rtsp_url = "rtsp://192.168.1.203:8555/profile0"
+        rtsp_url = "rtsp://192.168.1.203:8555/profile0"
         self.cap = cv2.VideoCapture(rtsp_url)
 
         self.frame = None
@@ -112,7 +112,8 @@ def main():
 
     # Создаём поток для RTSP вывода
     fourcc = cv2.VideoWriter_fourcc(*'H264')
-    out = cv2.VideoWriter('appsrc ! video/x-raw,format=BGR ! videoconvert ! x264enc ! rtspclientsink location=rtsp://127.0.0.1:8554/test', fourcc, 25, (640, 480))
+
+    out = cv2.VideoWriter('appsrc ! video/x-raw,format=RGB ! videoconvert ! x264enc ! rtspclientsink location=rtsp://127.0.0.1:8554/test', fourcc, 25, (640, 480))
 
     # Создание RTSP сервера с использованием GStreamer
     def start_rtsp_server():
