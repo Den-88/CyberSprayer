@@ -119,26 +119,26 @@ def main():
     # signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(sig, frame, running))
 
     # Создаём поток для RTSP вывода
-    fourcc = cv2.VideoWriter_fourcc(*'H265')
+    fourcc = cv2.VideoWriter_fourcc(*'H264')
 
-    out = cv2.VideoWriter('appsrc ! video/x-raw,format=BGR ! videoconvert ! x264enc ! rtspclientsink location=rtsp://127.0.0.1:8554/test', fourcc, 25, (640, 480))
+    out = cv2.VideoWriter('appsrc ! video/x-raw,format=BGR ! videoconvert ! x264enc ! rtspclientsink location=rtsp://127.0.0.1:8554/test', fourcc, 25, (1920, 1080))
 
     # Создание RTSP сервера с использованием GStreamer
-    def start_rtsp_server():
-        gst_command = [
-            'gst-launch-1.0',
-            'rtspsrc',
-            'location=rtsp://127.0.0.1:8554/test',
-            'protocols=tcp',
-            'latency=10',
-            '! decodebin',
-            '! videoconvert',
-            '! autovideosink'
-        ]
-        subprocess.Popen(gst_command)
-
-    # Запуск RTSP сервера в отдельном процессе
-    start_rtsp_server()
+    # def start_rtsp_server():
+    #     gst_command = [
+    #         'gst-launch-1.0',
+    #         'rtspsrc',
+    #         'location=rtsp://127.0.0.1:8554/test',
+    #         'protocols=tcp',
+    #         'latency=10',
+    #         '! decodebin',
+    #         '! videoconvert',
+    #         '! autovideosink'
+    #     ]
+    #     subprocess.Popen(gst_command)
+    #
+    # # Запуск RTSP сервера в отдельном процессе
+    # start_rtsp_server()
 
 
     while running:
