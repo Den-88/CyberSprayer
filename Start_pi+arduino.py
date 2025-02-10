@@ -54,7 +54,7 @@ class FrameCaptureThread(threading.Thread):
         # )
 
         self.cap = cv2.VideoCapture(
-            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 drop=true ! rtph264depay ! h264parse ! avdec_h265 ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
+            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 drop=true ! rtph264depay ! h264parse ! avdec_h264 ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
             cv2.CAP_GSTREAMER
         )
         # rtsp_url = "rtsp://192.168.1.203:8555/profile0"
