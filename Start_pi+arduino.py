@@ -125,7 +125,7 @@ def main():
 
     # Создаём GStreamer-пайплайн для RTSP вывода
     pipeline = (
-        "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=500 speed-preset=ultrafast "
+        "appsrc ! videoconvert ! x264enc tune=zerolatency bitrate=500 speed-preset=ultrafast "
         "! rtspclientsink location=rtsp://127.0.0.1:8554/test"
     )
 
