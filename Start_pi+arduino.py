@@ -169,6 +169,30 @@ def main():
             (0, 0, 0),
         )
 
+        # Отображение результата
+        if green_detected:
+            draw_text_with_background(
+                frame,
+                "Green detected!",
+                (10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0),
+                2,
+                (0, 0, 0),
+            )
+        else:
+            draw_text_with_background(
+                frame,
+                f"No green detected!",
+                (10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
+
         spray_status = "Spray: ON" if spray_active else "Spray: OFF"
         spray_color = (0, 255, 0) if spray_active else (0, 0, 255)
         draw_text_with_background(
