@@ -125,7 +125,8 @@ def main():
 
     # Создаём GStreamer-пайплайн для RTSP вывода
     pipeline = (
-        "appsrc ! videoconvert ! video/x-raw,format=BGR ! vp8enc bitrate=1500 ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
+        "appsrc ! videoconvert ! video/x-raw,format=BGR ! x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast "
+        "! rtspclientsink location=rtsp://127.0.0.1:8554/test"
     )
 
     fourcc = cv2.VideoWriter_fourcc(*'H264')
