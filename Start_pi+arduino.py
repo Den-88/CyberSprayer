@@ -48,7 +48,7 @@ class FrameCaptureThread(threading.Thread):
         #     f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
         #     cv2.CAP_GSTREAMER
         # )
-        rtsp_url = "rtsp://192.168.1.203:8555/profile0"
+        # rtsp_url = "rtsp://192.168.1.203:8555/profile0"
         self.cap = cv2.VideoCapture(rtsp_url)
 
         self.frame = None
@@ -62,10 +62,12 @@ class FrameCaptureThread(threading.Thread):
                 with self.lock:
                     self.frame = frame
             # time.sleep(0.01)
+        self.cap.release()  # Освобождаем ресурс при завершении
+
 
     def stop(self):
         self.running = False
-        self.cap.release()
+        self.join()  # Ждем завершения потока
 
     def get_frame(self):
         with self.lock:
@@ -75,8 +77,13 @@ class FrameCaptureThread(threading.Thread):
 def signal_handler(sig, frame):
     print("Программа завершена.")
 
-    cv2.destroyAllWindows()
-    # sys.exit(0)  # Выход из программы
+    running = False  # Останавливаем главный цикл
+    capture_thread.stop()  # Останавливаем поток захвата
+    out.release()  # Освобождаем запись видео
+    cv2.destroyAllWindows()  # Закрываем окна OpenCV
+
+    sys.exit(0)  # Выход из программы
+
 
 # Запуск анализа видео из RTSP потока
 def main():
@@ -88,6 +95,8 @@ def main():
 
     spray_active = False
     spray_end_time = 0
+
+    global running
     running = True
 
     # Устанавливаем обработчик сигнала для корректного завершения программы
@@ -216,5 +225,6 @@ def main():
 
 if __name__ == "__main__":
     # Устанавливаем обработчик сигнала для корректного завершения программы
+
     signal.signal(signal.SIGINT, signal_handler)
     main()
