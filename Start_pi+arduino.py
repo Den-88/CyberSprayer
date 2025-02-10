@@ -6,6 +6,8 @@ import numpy as np
 from pyfirmata2 import Arduino, util
 import signal
 import sys
+import subprocess
+
 
 # board = Arduino("/dev/tty.usbserial-1421430")
 board = Arduino("/dev/ttyUSB0")
@@ -93,6 +95,23 @@ def main():
     # Создаём поток для RTSP вывода
     fourcc = cv2.VideoWriter_fourcc(*'H264')
     out = cv2.VideoWriter('appsrc ! video/x-raw,format=BGR ! videoconvert ! x264enc ! rtspclientsink location=rtsp://127.0.0.1:8554', fourcc, 25, (640, 480))
+
+    # Создание RTSP сервера с использованием GStreamer
+    def start_rtsp_server():
+        gst_command = [
+            'gst-launch-1.0',
+            'rtspsrc',
+            'location=rtsp://127.0.0.1:8554',
+            'protocols=tcp',
+            'latency=10',
+            '! decodebin',
+            '! videoconvert',
+            '! autovideosink'
+        ]
+        subprocess.Popen(gst_command)
+
+    # Запуск RTSP сервера в отдельном процессе
+    start_rtsp_server()
 
 
     while running:
@@ -187,6 +206,11 @@ def main():
     #
     # capture_thread.stop()
     # cv2.destroyAllWindows()
+
+    capture_thread.stop()
+    out.release()
+    cv2.destroyAllWindows()
+
 
 
 if __name__ == "__main__":
