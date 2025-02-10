@@ -13,7 +13,8 @@ import subprocess
 board = Arduino("/dev/ttyUSB0")
 
 led_pin = 13  # Пин для светодиода
-relay_pin = 2  # Пин для реле
+relay_pin_1 = 2  # Пин для реле 1
+relay_pin_2 = 3  # Пин для реле 2
 
 def detect_green(frame):
     if frame is None:
@@ -52,8 +53,12 @@ class FrameCaptureThread(threading.Thread):
         #     cv2.CAP_GSTREAMER
         # )
 
+        self.cap = cv2.VideoCapture(
+            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 drop=true ! rtph265depay ! h265parse ! vaapih265dec ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
+            cv2.CAP_GSTREAMER
+        )
         # rtsp_url = "rtsp://192.168.1.203:8555/profile0"
-        self.cap = cv2.VideoCapture(rtsp_url)
+        # self.cap = cv2.VideoCapture(rtsp_url)
 
         self.frame = None
         self.lock = threading.Lock()
@@ -171,7 +176,7 @@ def main():
 
         # Управляем светодиодом на ардуино и форсункой
         board.digital[led_pin].write(green_detected)  # Переключаем светодиод
-        board.digital[relay_pin].write(not spray_active)  # Переключаем форсунку
+        board.digital[relay_pin_1].write(not spray_active)  # Переключаем форсунку
         print(f"Green ratio: {green_ratio:.6f}, Detected: {green_detected}, Spray: {spray_active}")
 
         # Добавление текста и статуса
