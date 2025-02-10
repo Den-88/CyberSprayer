@@ -149,6 +149,10 @@ def main():
         if frame is None:
             continue
 
+        # Рисуем вертикальную линию посередине
+        height, width = frame.shape[:2]
+        cv2.line(frame, (width // 2, 0), (width // 2, height), (0, 255, 0), 2)
+
         # Анализ левой половины кадра
         green_detected_left, green_ratio_left = detect_green(frame, region="left")
         current_time = time.time()
@@ -179,10 +183,10 @@ def main():
         print(f"Left: {green_ratio_left:.6f}, Detected: {green_detected_left}, Spray: {spray_active_left}")
         print(f"Right: {green_ratio_right:.6f}, Detected: {green_detected_right}, Spray: {spray_active_right}")
 
-        # Добавление текста на кадр
+        # Добавление текста на кадр (левая часть)
         draw_text_with_background(
             frame,
-            f"Left GREEN: {green_ratio_left * 100:.2f}%",
+            f"Left Detected: {green_detected_left}",
             (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
@@ -192,8 +196,30 @@ def main():
         )
         draw_text_with_background(
             frame,
-            f"Right GREEN: {green_ratio_right * 100:.2f}%",
+            f"Left Spray: {spray_active_left}",
             (10, 70),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (255, 255, 255),
+            2,
+            (0, 0, 0),
+        )
+
+        # Добавление текста на кадр (правая часть)
+        draw_text_with_background(
+            frame,
+            f"Right Detected: {green_detected_right}",
+            (width // 2 + 10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (255, 255, 255),
+            2,
+            (0, 0, 0),
+        )
+        draw_text_with_background(
+            frame,
+            f"Right Spray: {spray_active_right}",
+            (width // 2 + 10, 70),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
             (255, 255, 255),
