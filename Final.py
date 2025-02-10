@@ -28,7 +28,7 @@ board = Arduino(ARDUINO_PORT)
 def detect_green(frame, region=None):
     """Обнаружение зеленого цвета на кадре или его части."""
     if frame is None:
-        return False, 0  # Если кадра нет, ничего не делать
+        return False, 0, []  # Если кадра нет, ничего не делать
 
     # Если указана область, обрезаем кадр
     if region == "left":
@@ -48,8 +48,11 @@ def detect_green(frame, region=None):
     total_pixels = height * width
     green_ratio = green_pixels / total_pixels
 
-    # Возвращаем результат и процент зеленых пикселей
-    return green_ratio > GREEN_THRESHOLD, green_ratio
+    # Находим контуры зеленых объектов
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Возвращаем результат, процент зеленых пикселей и контуры
+    return green_ratio > GREEN_THRESHOLD, green_ratio, contours
 
 
 def draw_text_with_background(frame, text, position, font, scale, color, thickness, bg_color, alpha=0.5):
@@ -154,7 +157,7 @@ def main():
         cv2.line(frame, (width // 2, 0), (width // 2, height), (0, 255, 0), 2)
 
         # Анализ левой половины кадра
-        green_detected_left, green_ratio_left = detect_green(frame, region="left")
+        green_detected_left, green_ratio_left, contours_left = detect_green(frame, region="left")
         current_time = time.time()
 
         # Логика работы форсунки для левой части
@@ -165,7 +168,7 @@ def main():
             spray_active_left = False
 
         # Анализ правой половины кадра
-        green_detected_right, green_ratio_right = detect_green(frame, region="right")
+        green_detected_right, green_ratio_right, contours_right = detect_green(frame, region="right")
 
         # Логика работы форсунки для правой части
         if green_detected_right:
@@ -183,6 +186,16 @@ def main():
         print(f"Left: {green_ratio_left:.6f}, Detected: {green_detected_left}, Spray: {spray_active_left}")
         print(f"Right: {green_ratio_right:.6f}, Detected: {green_detected_right}, Spray: {spray_active_right}")
 
+        # Обводка зеленых объектов на левой половине
+        for contour in contours_left:
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        # Обводка зеленых объектов на правой половине
+        for contour in contours_right:
+            x, y, w, h = cv2.boundingRect(contour)
+            cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
+
         # Добавление текста на кадр (левая часть)
         draw_text_with_background(
             frame,
@@ -190,7 +203,7 @@ def main():
             (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
-            (255, 255, 255),
+            (0, 255, 0) if green_detected_left else (0, 0, 255),
             2,
             (0, 0, 0),
         )
@@ -200,7 +213,7 @@ def main():
             (10, 70),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
-            (255, 255, 255),
+            (0, 255, 0) if spray_active_left else (0, 0, 255),
             2,
             (0, 0, 0),
         )
@@ -212,7 +225,7 @@ def main():
             (width // 2 + 10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
-            (255, 255, 255),
+            (0, 255, 0) if green_detected_right else (0, 0, 255),
             2,
             (0, 0, 0),
         )
@@ -222,7 +235,7 @@ def main():
             (width // 2 + 10, 70),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
-            (255, 255, 255),
+            (0, 255, 0) if spray_active_right else (0, 0, 255),
             2,
             (0, 0, 0),
         )
