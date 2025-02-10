@@ -90,6 +90,11 @@ def main():
     # Устанавливаем обработчик сигнала для корректного завершения программы
     # signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(sig, frame, running))
 
+    # Создаём поток для RTSP вывода
+    fourcc = cv2.VideoWriter_fourcc(*'H264')
+    out = cv2.VideoWriter('appsrc ! video/x-raw,format=BGR ! videoconvert ! x264enc ! rtspclientsink location=rtsp://127.0.0.1:8554', fourcc, 25, (640, 480))
+
+
     while running:
         start_time = time.time()
 
@@ -173,6 +178,10 @@ def main():
     #         running = False
     #
     #     #
+
+        # Отправка изображения на RTSP
+        out.write(frame)
+
         end_time = time.time()
         print(f"Frame processed in {end_time - start_time:.4f} seconds")
     #
