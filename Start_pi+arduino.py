@@ -48,15 +48,15 @@ def draw_text_with_background(frame, text, position, font, scale, color, thickne
 class FrameCaptureThread(threading.Thread):
     def __init__(self, rtsp_url):
         threading.Thread.__init__(self)
-        self.cap = cv2.VideoCapture(
-            f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
-            cv2.CAP_GSTREAMER
-        )
-
         # self.cap = cv2.VideoCapture(
-        #     f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink ",
+        #     f"rtspsrc location={rtsp_url} protocols=tcp latency=10 ! rtph265depay ! h265parse ! avdec_h265 ! videoconvert ! appsink",
         #     cv2.CAP_GSTREAMER
         # )
+
+        self.cap = cv2.VideoCapture(
+            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 drop=true ! rtph264depay ! h264parse ! vaapih264dec ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
+            cv2.CAP_GSTREAMER
+        )
         # rtsp_url = "rtsp://192.168.1.203:8555/profile0"
         # self.cap = cv2.VideoCapture(rtsp_url)
 
