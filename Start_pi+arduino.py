@@ -119,7 +119,7 @@ def main():
     # signal.signal(signal.SIGINT, lambda sig, frame: signal_handler(sig, frame, running))
 
     # Создаём поток для RTSP вывода
-    fourcc = cv2.VideoWriter_fourcc(*'H264')
+    fourcc = cv2.VideoWriter_fourcc(*'H265')
 
     out = cv2.VideoWriter('appsrc ! video/x-raw,format=BGR ! videoconvert ! x264enc ! rtspclientsink location=rtsp://127.0.0.1:8554/test', fourcc, 25, (640, 480))
 
