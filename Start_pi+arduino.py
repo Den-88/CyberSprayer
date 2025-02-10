@@ -74,8 +74,9 @@ class FrameCaptureThread(threading.Thread):
 # Функция для корректного завершения программы
 def signal_handler(sig, frame):
     print("Программа завершена.")
+
     cv2.destroyAllWindows()
-    sys.exit(0)  # Выход из программы
+    # sys.exit(0)  # Выход из программы
 
 # Запуск анализа видео из RTSP потока
 def main():
