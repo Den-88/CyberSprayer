@@ -235,6 +235,8 @@ def main():
     #     #
 
         # Отправка изображения на RTSP
+        print(f"Frame shape: {frame.shape}")  # Должно быть (480, 640, 3)
+
         out.write(frame)
 
         end_time = time.time()
