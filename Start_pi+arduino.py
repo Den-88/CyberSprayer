@@ -102,6 +102,14 @@ def main():
     capture_thread = FrameCaptureThread(rtsp_url)
     capture_thread.start()
 
+    # Проверяем, открылся ли поток
+    time.sleep(2)  # Даем время потоку запуститься
+    if not capture_thread.cap.isOpened():
+        print("Ошибка: невозможно открыть RTSP-поток. Завершаем программу.")
+        capture_thread.stop()
+        sys.exit(1)  # Завершаем с кодом ошибки
+
+
     spray_active = False
     spray_end_time = 0
 
