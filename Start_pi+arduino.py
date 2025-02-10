@@ -130,7 +130,7 @@ def main():
     )
 
     # fourcc = cv2.VideoWriter_fourcc(*'H264')
-    out = cv2.VideoWriter(pipeline, cv2.CAP_GSTREAMER, 0, 25, (2560, 1440), True)
+    out = cv2.VideoWriter(pipeline, cv2.CAP_GSTREAMER, 0, 25, (1920, 1080), True)
 
     # Создание RTSP сервера с использованием GStreamer
     # def start_rtsp_server():
