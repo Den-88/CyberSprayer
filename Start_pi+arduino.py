@@ -77,7 +77,7 @@ def signal_handler(sig, frame):
 
 # Запуск анализа видео из RTSP потока
 def main():
-    rtsp_url = "rtsp://192.168.1.203:8554/profile0"
+    rtsp_url = "rtsp://192.168.1.203:8555/profile0"
 
     # Запуск потока захвата
     capture_thread = FrameCaptureThread(rtsp_url)

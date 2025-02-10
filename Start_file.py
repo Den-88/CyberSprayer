@@ -2,6 +2,8 @@ import time
 
 import cv2
 import numpy as np
+import subprocess
+
 
 # Функция для определения наличия зелёного цвета
 def detect_green(frame):
@@ -43,11 +45,37 @@ def draw_text_with_background(frame, text, position, font, scale, color, thickne
     # Добавляем текст
     cv2.putText(frame, text, (x, y), font, scale, color, thickness)
 
+def start_ffmpeg_stream(output_url, width, height, fps):
+    command = [
+        'ffmpeg',
+        '-y',  # Перезапись файла, если он существует
+        '-f', 'rawvideo',  # Входной формат
+        '-pix_fmt', 'bgr24',  # Формат пикселей
+        '-s', f'{width}x{height}',  # Разрешение
+        '-r', str(fps),  # Частота кадров
+        '-i', '-',  # Входной поток из stdin
+        '-c:v', 'libx264',  # Кодек
+        '-preset', 'ultrafast',  # Скорость кодирования
+        '-f', 'rtsp',  # Формат вывода
+        output_url  # Выходной URL
+    ]
+    process = subprocess.Popen(command, stdin=subprocess.PIPE)
+    return process
 
 # Запуск анализа видео из файла
 def main():
     video_path = "video2.MOV"  # Замените на путь к вашему видеофайлу
+    output_rtsp_url = "rtsp://localhost:554/live"
+
+
     cap = cv2.VideoCapture(video_path)  # Открытие видеофайла
+
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+
+    ffmpeg_process = start_ffmpeg_stream(output_rtsp_url, width, height, fps)
+
 
     if not cap.isOpened():
         print("Не удалось открыть видеофайл")
@@ -126,11 +154,16 @@ def main():
         # Показ кадра
         cv2.imshow("Green Color Detection", frame)
 
+        # Отправка кадра в ffmpeg для ретрансляции
+        ffmpeg_process.stdin.write(frame.tobytes())
+
         # Выход по клавише 'q'
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
     cap.release()
+    ffmpeg_process.stdin.close()
+    ffmpeg_process.wait()
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":

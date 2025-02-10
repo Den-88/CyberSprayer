@@ -68,7 +68,7 @@ def process_frame(frame):
 
 
 def main():
-    rtsp_url = "rtsp://192.168.1.203:8554/profile0"  # Укажите ваш RTSP URL
+    rtsp_url = "rtsp://192.168.1.203:8555/profile0"  # Укажите ваш RTSP URL
     running = True
 
     while running:
