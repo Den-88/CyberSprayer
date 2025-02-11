@@ -24,6 +24,9 @@ RTSP_OUTPUT_PIPELINE = (
     "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
 )
 
+# Флаг для включения/отключения вывода изображения
+ENABLE_OUTPUT = False  # По умолчанию вывод отключен
+
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
 
@@ -141,8 +144,9 @@ def main():
         capture_thread.stop()
         sys.exit(1)
 
-    # Инициализация RTSP-вывода
-    out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (1920, 1080), True)
+    # Инициализация RTSP-вывода, если вывод включен
+    if ENABLE_OUTPUT:
+        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (1920, 1080), True)
 
     # Основной цикл обработки кадров
     running = True
@@ -251,8 +255,9 @@ def main():
             (0, 0, 0),
         )
 
-        # Отправка кадра в RTSP
-        out.write(frame)
+        # Отправка кадра в RTSP, если вывод включен
+        if ENABLE_OUTPUT:
+            out.write(frame)
 
         # Логирование времени обработки кадра
         end_time = time.time()
@@ -260,7 +265,8 @@ def main():
 
     # Завершение работы
     capture_thread.stop()
-    out.release()
+    if ENABLE_OUTPUT:
+        out.release()
     cv2.destroyAllWindows()
 
 
