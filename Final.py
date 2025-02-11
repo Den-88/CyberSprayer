@@ -21,7 +21,7 @@ RTSP_OUTPUT_PIPELINE = (
     # "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast "
     # "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
     "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
-    "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test latency=100"
+    "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
 )
 
 # Инициализация Arduino
