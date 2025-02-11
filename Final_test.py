@@ -17,7 +17,7 @@ MIN_OBJECT_AREA = 500
 
 # Настройки RTSP
 # RTSP_URLS = [f"rtsp://192.168.1.{203 + i}:8555/profile0" for i in range(12)]  # 12 камер
-RTSP_URLS = [f"rtsp://192.168.1.203:8555/profile0" for i in range(12)]  # 12 камер
+RTSP_URLS = [f"rtsp://192.168.1.203:8555/profile0" for i in range(2)]  # 12 камер
 
 RTSP_OUTPUT_PIPELINE = (
     "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
