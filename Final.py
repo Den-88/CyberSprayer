@@ -19,8 +19,11 @@ MIN_OBJECT_AREA = 500          # Минимальная площадь объе�
 # Настройки RTSP
 RTSP_URL = "rtsp://192.168.1.203:8555/profile0"
 RTSP_OUTPUT_PIPELINE = (
-    "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast "
+    # "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast "
+    # "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
+    "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc bitrate=3500 "
     "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
+
 )
 
 # Инициализация Arduino
