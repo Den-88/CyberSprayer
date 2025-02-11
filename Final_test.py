@@ -192,8 +192,8 @@ def main():
             board.digital[RELAY_PIN_2].write(not spray_active_right[i])  # Реле 2 (правая часть)
 
             # Логирование
-            print(f"Camera {i} - Left Detected: {green_detected_left}, Spray: {spray_active_left[i]}")
-            print(f"Camera {i} - Right Detected: {green_detected_right}, Spray: {spray_active_right[i]}")
+            print(f"Camera {i + 1} - Left Detected: {green_detected_left}, Spray: {spray_active_left[i]}")
+            print(f"Camera {i + 1} - Right Detected: {green_detected_right}, Spray: {spray_active_right[i]}")
 
             # Обводка зеленых объектов на левой половине и отображение площади
             for contour in contours_left:
