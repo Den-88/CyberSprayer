@@ -78,7 +78,7 @@ class FrameCaptureThread(threading.Thread):
     def __init__(self, rtsp_url):
         threading.Thread.__init__(self)
         self.cap = cv2.VideoCapture(
-            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 ! rtph264depay ! h264parse ! rtph264pay ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
+            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 ! rtph264depay ! h264parse ! omxh264dec ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
             cv2.CAP_GSTREAMER
         )
         self.frame = None
