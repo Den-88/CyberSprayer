@@ -5,7 +5,6 @@ import numpy as np
 from pyfirmata2 import Arduino
 import signal
 import sys
-import psutil
 
 # Конфигурация Arduino
 ARDUINO_PORT = "/dev/ttyUSB0"  # Порт Arduino
@@ -16,12 +15,17 @@ RELAY_PIN_2 = 3                # Пин для реле 2 (правая част
 # Минимальная площадь объекта для обнаружения (в пикселях)
 MIN_OBJECT_AREA = 500
 
-# Настройка RTSP (используем одну камеру для эмуляции 12)
-RTSP_URL = "rtsp://192.168.1.203:8555/profile0"  # Замени на адрес твоей камеры
+# Настройки RTSP
+# RTSP_URLS = [f"rtsp://192.168.1.{203 + i}:8555/profile0" for i in range(12)]  # 12 камер
+RTSP_URLS = [f"rtsp://192.168.1.203:8555/profile0" for i in range(12)]  # 12 камер
+
 RTSP_OUTPUT_PIPELINE = (
     "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
     "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
 )
+
+# Флаг для включения/отключения вывода изображения
+ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
@@ -104,114 +108,164 @@ class FrameCaptureThread(threading.Thread):
             return self.frame
 
 
-def monitor_cpu_usage():
-    """Функция для мониторинга загрузки процессора."""
-    while True:
-        cpu_usage = psutil.cpu_percent(interval=1)
-        print(f"CPU Usage: {cpu_usage}%")
-        time.sleep(1)
-
-
 def signal_handler(sig, frame):
     """Обработчик сигнала для корректного завершения программы."""
     print("Программа завершена.")
     global running
     running = False
-    capture_thread.stop()  # Останавливаем поток
+
+    for capture_thread in capture_threads:
+        capture_thread.stop()  # Останавливаем все потоки
     if ENABLE_OUTPUT and out:
         out.release()  # Закрываем видео-поток
+
     cv2.destroyAllWindows()  # Закрываем окна OpenCV
     sys.exit(0)  # Выход из программы
 
 
 def main():
     """Основная функция программы."""
-    global running, capture_thread, out
+    global running, capture_threads, out
 
-    # Запуск потока мониторинга процессора
-    cpu_monitor_thread = threading.Thread(target=monitor_cpu_usage, daemon=True)
-    cpu_monitor_thread.start()
+    # Запуск потоков захвата кадров для всех камер
+    capture_threads = [FrameCaptureThread(url) for url in RTSP_URLS]
+    for thread in capture_threads:
+        thread.start()
 
-    # Запуск потока захвата для одной камеры
-    capture_thread = FrameCaptureThread(RTSP_URL)
-    capture_thread.start()
-
-    # Даем время потоку запуститься
+    # Даем время потокам запуститься
     time.sleep(2)
-    if not capture_thread.cap.isOpened():
-        print("Ошибка: невозможно открыть RTSP-поток. Завершаем программу.")
-        capture_thread.stop()
-        sys.exit(1)
+    for thread in capture_threads:
+        if not thread.cap.isOpened():
+            print(f"Ошибка: невозможно открыть RTSP-поток {thread.cap.get(cv2.CAP_PROP_POS_MSEC)}. Завершаем программу.")
+            for t in capture_threads:
+                t.stop()
+            sys.exit(1)
 
     # Инициализация RTSP-вывода, если вывод включен
-    out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (1920, 1080), True)
+    if ENABLE_OUTPUT:
+        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (1920, 1080), True)
 
-    # Эмуляция 12 камер путем разделения кадра
+    # Основной цикл обработки кадров
     running = True
-    spray_active_left = False
-    spray_active_right = False
-    spray_end_time_left = 0
-    spray_end_time_right = 0
+    spray_active_left = [False] * 12
+    spray_active_right = [False] * 12
+    spray_end_time_left = [0] * 12
+    spray_end_time_right = [0] * 12
 
     while running:
         start_time = time.time()
 
-        # Получаем кадр с камеры
-        frame = capture_thread.get_frame()
-        if frame is None:
-            continue
+        for i, capture_thread in enumerate(capture_threads):
+            # Получаем кадр из потока
+            frame = capture_thread.get_frame()
+            if frame is None:
+                continue
 
-        # Разделение кадра на 12 частей (3x4)
-        height, width, _ = frame.shape
-        regions = [
-            frame[0:height//3, 0:width//4], frame[0:height//3, width//4:width//2], frame[0:height//3, width//2:3*width//4], frame[0:height//3, 3*width//4:],
-            frame[height//3:2*height//3, 0:width//4], frame[height//3:2*height//3, width//4:width//2], frame[height//3:2*height//3, width//2:3*width//4], frame[height//3:2*height//3, 3*width//4:],
-            frame[2*height//3:, 0:width//4], frame[2*height//3:, width//4:width//2], frame[2*height//3:, width//2:3*width//4], frame[2*height//3:, 3*width//4:]
-        ]
+            # Рисуем вертикальную белую линию посередине
+            height, width = frame.shape[:2]
+            cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
 
-        # Анализ левой половины кадра
-        green_detected_left, contours_left = detect_green(frame, region="left")
-        current_time = time.time()
+            # Анализ левой половины кадра
+            green_detected_left, contours_left = detect_green(frame, region="left")
+            current_time = time.time()
 
-        # Логика работы форсунки для левой части
-        if green_detected_left:
-            spray_active_left = True
-            spray_end_time_left = current_time + 0.3  # Таймер на 0.3 секунды
-        elif current_time > spray_end_time_left:
-            spray_active_left = False
+            # Логика работы форсунки для левой части
+            if green_detected_left:
+                spray_active_left[i] = True
+                spray_end_time_left[i] = current_time + 0.3  # Таймер на 0.3 секунды
+            elif current_time > spray_end_time_left[i]:
+                spray_active_left[i] = False
 
-        # Анализ правой половины кадра
-        green_detected_right, contours_right = detect_green(frame, region="right")
+            # Анализ правой половины кадра
+            green_detected_right, contours_right = detect_green(frame, region="right")
 
-        # Логика работы форсунки для правой части
-        if green_detected_right:
-            spray_active_right = True
-            spray_end_time_right = current_time + 0.3  # Таймер на 0.3 секунды
-        elif current_time > spray_end_time_right:
-            spray_active_right = False
+            # Логика работы форсунки для правой части
+            if green_detected_right:
+                spray_active_right[i] = True
+                spray_end_time_right[i] = current_time + 0.3  # Таймер на 0.3 секунды
+            elif current_time > spray_end_time_right[i]:
+                spray_active_right[i] = False
 
-        # Вывод информации о состоянии
-        draw_text_with_background(frame, f"Left Sprayer Active: {spray_active_left}", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, (0, 0, 0), alpha=0.7)
-        draw_text_with_background(frame, f"Right Sprayer Active: {spray_active_right}", (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, (0, 0, 0), alpha=0.7)
+            # Управление Arduino
+            board.digital[LED_PIN].write(green_detected_left or green_detected_right)  # Светодиод
+            board.digital[RELAY_PIN_1].write(not spray_active_left[i])  # Реле 1 (левая часть)
+            board.digital[RELAY_PIN_2].write(not spray_active_right[i])  # Реле 2 (правая часть)
+
+            # Логирование
+            print(f"Camera {i} - Left Detected: {green_detected_left}, Spray: {spray_active_left[i]}")
+            print(f"Camera {i} - Right Detected: {green_detected_right}, Spray: {spray_active_right[i]}")
+
+            # Обводка зеленых объектов на левой половине и отображение площади
+            for contour in contours_left:
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                area = cv2.contourArea(contour)
+                cv2.putText(frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+            # Обводка зеленых объектов на правой половине и отображение площади
+            for contour in contours_right:
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
+                area = cv2.contourArea(contour)
+                cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+            # Добавление текста на кадр (левая часть)
+            draw_text_with_background(
+                frame,
+                f"Left Detected: {green_detected_left}",
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0) if green_detected_left else (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
+            draw_text_with_background(
+                frame,
+                f"Left Spray: {spray_active_left[i]}",
+                (10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0) if spray_active_left[i] else (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
+
+            # Добавление текста на кадр (правая часть)
+            draw_text_with_background(
+                frame,
+                f"Right Detected: {green_detected_right}",
+                (width // 2 + 10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0) if green_detected_right else (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
+            draw_text_with_background(
+                frame,
+                f"Right Spray: {spray_active_right[i]}",
+                (width // 2 + 10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0) if spray_active_right[i] else (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
+
+            # Отправка кадра в RTSP, если вывод включен
+            if ENABLE_OUTPUT:
+                out.write(frame)
 
         # Логирование времени обработки кадра
         end_time = time.time()
-        print(f"Frame processed in {end_time - start_time:.4f} seconds")
-
-        # Вывод видео
-        if out:
-            out.write(frame)
-
-        cv2.imshow("Video Feed", frame)  # Показываем видео в окне
-
-        # Выход при нажатии 'q'
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        print(f"Frames processed in {end_time - start_time:.4f} seconds")
 
     # Завершение работы
-    capture_thread.stop()
-    if out:
-        out.release()  # Закрываем видео-поток
+    for thread in capture_threads:
+        thread.stop()
+    if ENABLE_OUTPUT:
+        out.release()
     cv2.destroyAllWindows()
 
 
