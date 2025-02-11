@@ -20,7 +20,7 @@ RTSP_URL = "rtsp://192.168.1.203:8555/profile0"
 RTSP_OUTPUT_PIPELINE = (
     # "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast "
     # "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
-    "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=3500 "
+    "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc bitrate=2500 speed-preset=ultrafast "
     "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
 )
 
@@ -192,7 +192,7 @@ def main():
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
             area = cv2.contourArea(contour)
-            cv2.putText(frame, f"Area: {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            cv2.putText(frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
         # Обводка зеленых объектов на правой половине и отображение площади
         for contour in contours_right:
