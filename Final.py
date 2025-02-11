@@ -12,9 +12,8 @@ LED_PIN = 13                   # Пин для светодиода
 RELAY_PIN_1 = 2                # Пин для реле 1 (левая часть)
 RELAY_PIN_2 = 3                # Пин для реле 2 (правая часть)
 
-# Порог для обнаружения зеленого цвета
-GREEN_THRESHOLD = 0.00400      # Порог: 0.4% зелёных пикселей
-MIN_OBJECT_AREA = 500          # Минимальная площадь объекта для обнаружения (в пикселях)
+# Минимальная площадь объекта для обнаружения (в пикселях)
+MIN_OBJECT_AREA = 500
 
 # Настройки RTSP
 RTSP_URL = "rtsp://192.168.1.203:8555/profile0"
@@ -23,7 +22,6 @@ RTSP_OUTPUT_PIPELINE = (
     # "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
     "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc bitrate=3500 speed-preset=ultrafast "
     "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
-
 )
 
 # Инициализация Arduino
@@ -32,7 +30,7 @@ board = Arduino(ARDUINO_PORT)
 def detect_green(frame, region=None):
     """Обнаружение зеленого цвета на кадре или его части."""
     if frame is None:
-        return False, 0, []  # Если кадра нет, ничего не делать
+        return False, []  # Если кадра нет, ничего не делать
 
     # Если указана область, обрезаем кадр
     if region == "left":
@@ -47,10 +45,6 @@ def detect_green(frame, region=None):
 
     # Создаем маску для зеленого цвета
     mask = cv2.inRange(hsv, lower_green, upper_green)
-    green_pixels = cv2.countNonZero(mask)
-    height, width = frame.shape[:2]
-    total_pixels = height * width
-    green_ratio = green_pixels / total_pixels
 
     # Находим контуры зеленых объектов
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -58,8 +52,8 @@ def detect_green(frame, region=None):
     # Фильтруем контуры по минимальной площади
     filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_OBJECT_AREA]
 
-    # Возвращаем результат, процент зеленых пикселей и отфильтрованные контуры
-    return len(filtered_contours) > 0, green_ratio, filtered_contours
+    # Возвращаем результат и отфильтрованные контуры
+    return len(filtered_contours) > 0, filtered_contours
 
 
 def draw_text_with_background(frame, text, position, font, scale, color, thickness, bg_color, alpha=0.5):
@@ -164,7 +158,7 @@ def main():
         cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
 
         # Анализ левой половины кадра
-        green_detected_left, green_ratio_left, contours_left = detect_green(frame, region="left")
+        green_detected_left, contours_left = detect_green(frame, region="left")
         current_time = time.time()
 
         # Логика работы форсунки для левой части
@@ -175,7 +169,7 @@ def main():
             spray_active_left = False
 
         # Анализ правой половины кадра
-        green_detected_right, green_ratio_right, contours_right = detect_green(frame, region="right")
+        green_detected_right, contours_right = detect_green(frame, region="right")
 
         # Логика работы форсунки для правой части
         if green_detected_right:
@@ -190,18 +184,22 @@ def main():
         board.digital[RELAY_PIN_2].write(not spray_active_right)  # Реле 2 (правая часть)
 
         # Логирование
-        print(f"Left: {green_ratio_left:.6f}, Detected: {green_detected_left}, Spray: {spray_active_left}")
-        print(f"Right: {green_ratio_right:.6f}, Detected: {green_detected_right}, Spray: {spray_active_right}")
+        print(f"Left Detected: {green_detected_left}, Spray: {spray_active_left}")
+        print(f"Right Detected: {green_detected_right}, Spray: {spray_active_right}")
 
-        # Обводка зеленых объектов на левой половине
+        # Обводка зеленых объектов на левой половине и отображение площади
         for contour in contours_left:
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            area = cv2.contourArea(contour)
+            cv2.putText(frame, f"Area: {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-        # Обводка зеленых объектов на правой половине
+        # Обводка зеленых объектов на правой половине и отображение площади
         for contour in contours_right:
             x, y, w, h = cv2.boundingRect(contour)
             cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
+            area = cv2.contourArea(contour)
+            cv2.putText(frame, f"Area: {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
         # Добавление текста на кадр (левая часть)
         draw_text_with_background(
