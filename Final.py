@@ -122,7 +122,7 @@ def signal_handler(sig, frame):
 
     if capture_thread:
         capture_thread.stop()  # Останавливаем поток
-    if out:
+    if ENABLE_OUTPUT and out:
         out.release()  # Закрываем видео-поток
 
     cv2.destroyAllWindows()  # Закрываем окна OpenCV
