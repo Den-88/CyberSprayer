@@ -14,6 +14,7 @@ RELAY_PIN_2 = 3                # Пин для реле 2 (правая част
 
 # Порог для обнаружения зеленого цвета
 GREEN_THRESHOLD = 0.00400      # Порог: 0.4% зелёных пикселей
+MIN_OBJECT_AREA = 500          # Минимальная площадь объекта для обнаружения (в пикселях)
 
 # Настройки RTSP
 RTSP_URL = "rtsp://192.168.1.203:8555/profile0"
@@ -51,8 +52,11 @@ def detect_green(frame, region=None):
     # Находим контуры зеленых объектов
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    # Возвращаем результат, процент зеленых пикселей и контуры
-    return green_ratio > GREEN_THRESHOLD, green_ratio, contours
+    # Фильтруем контуры по минимальной площади
+    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_OBJECT_AREA]
+
+    # Возвращаем результат, процент зеленых пикселей и отфильтрованные контуры
+    return len(filtered_contours) > 0, green_ratio, filtered_contours
 
 
 def draw_text_with_background(frame, text, position, font, scale, color, thickness, bg_color, alpha=0.5):
@@ -152,9 +156,9 @@ def main():
         if frame is None:
             continue
 
-        # Рисуем вертикальную линию посередине
+        # Рисуем вертикальную белую линию посередине
         height, width = frame.shape[:2]
-        cv2.line(frame, (width // 2, 0), (width // 2, height), (0, 255, 0), 2)
+        cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
 
         # Анализ левой половины кадра
         green_detected_left, green_ratio_left, contours_left = detect_green(frame, region="left")
