@@ -20,8 +20,8 @@ RTSP_URL = "rtsp://192.168.1.203:8555/1"
 RTSP_OUTPUT_PIPELINE = (
     # "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast "
     # "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
-    "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x265enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
-    "! h265parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
+    "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
+    "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
 )
 
 # Флаг для включения/отключения вывода изображения
@@ -86,7 +86,7 @@ class FrameCaptureThread(threading.Thread):
         # )
 
         self.cap = cv2.VideoCapture(
-            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 ! rtph265depay ! h265parse ! openh265dec ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
+            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 !  h265parse ! openh265dec ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
             cv2.CAP_GSTREAMER
         )
 
