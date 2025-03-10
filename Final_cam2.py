@@ -16,7 +16,9 @@ RELAY_PIN_2 = 3                # Пин для реле 2 (правая част
 MIN_OBJECT_AREA = 500
 
 # Настройки RTSP
-RTSP_URL = "rtsp://192.168.1.203:8555/main"
+# RTSP_URL = "rtsp://192.168.1.203:8555/main"
+RTSP_URL = "rtsp://admin:denis123@192.168.1.203:8555/main"
+
 RTSP_OUTPUT_PIPELINE = (
     # "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast "
     # "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
