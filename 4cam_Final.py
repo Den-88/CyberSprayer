@@ -18,9 +18,7 @@ MIN_OBJECT_AREA = 150
 # Настройки RTSP
 RTSP_URLS = [
     "rtsp://admin:user12345@192.168.1.201:8555/main",  # Камера 1
-    # "rtsp://admin:user12345@192.168.1.202:8555/main",  # Камера 2
     "rtsp://admin:user12345@192.168.1.203:8555/main",  # Камера 3
-    # "rtsp://admin:user12345@192.168.1.204:8555/main"   # Камера 4
 ]
 
 RTSP_OUTPUT_PIPELINE = (
@@ -130,12 +128,20 @@ def signal_handler(sig, frame):
     sys.exit(0)  # Выход из программы
 
 
+def resize_frame(frame, width, height):
+    """Изменение размера кадра до заданных ширины и высоты."""
+    return cv2.resize(frame, (width, height))
+
+
 def merge_frames(frames):
     """Объединение кадров в один (горизонтально)."""
     height, width = frames[0].shape[:2]
 
+    # Приводим все кадры к одинаковому разрешению перед объединением
+    resized_frames = [resize_frame(frame, width, height) for frame in frames]
+
     # Объединяем все кадры по горизонтали
-    merged_frame = np.hstack(frames)  # Для горизонтальной стыковки
+    merged_frame = np.hstack(resized_frames)  # Для горизонтальной стыковки
 
     return merged_frame
 
