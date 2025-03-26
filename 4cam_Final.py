@@ -18,7 +18,9 @@ MIN_OBJECT_AREA = 150
 # Настройки RTSP
 RTSP_URLS = [
     "rtsp://admin:user12345@192.168.1.201:8555/main",  # Камера 1
-    "rtsp://admin:user12345@192.168.1.203:8555/main",  # Камера 3
+    "rtsp://admin:user12345@192.168.1.203:8555/main",  # Камера 2
+    "rtsp://admin:user12345@192.168.1.201:8555/main",  # Камера 3
+    "rtsp://admin:user12345@192.168.1.203:8555/main",  # Камера 4
 ]
 
 RTSP_OUTPUT_PIPELINE = (
@@ -167,7 +169,7 @@ def main():
 
     # Инициализация RTSP-вывода, если вывод включен
     if ENABLE_OUTPUT:
-        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (5120, 1440), True)
+        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (10240, 1440), True)
 
     # Основной цикл обработки кадров
     running = True
