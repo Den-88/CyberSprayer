@@ -130,6 +130,16 @@ def signal_handler(sig, frame):
     sys.exit(0)  # Выход из программы
 
 
+def merge_frames(frames):
+    """Объединение кадров в один (горизонтально)."""
+    height, width = frames[0].shape[:2]
+
+    # Объединяем все кадры по горизонтали
+    merged_frame = np.hstack(frames)  # Для горизонтальной стыковки
+
+    return merged_frame
+
+
 def main():
     """Основная функция программы."""
     global running, capture_threads, out
@@ -218,66 +228,32 @@ def main():
                 cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
             # Добавление текста на кадр (левая часть)
-            draw_text_with_background(
-                frame,
-                f"Left Detected: {green_detected_left}",
-                (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0) if green_detected_left else (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
-            draw_text_with_background(
-                frame,
-                f"Left Spray: {spray_active_left[i]}",
-                (10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0) if spray_active_left[i] else (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
+            draw_text_with_background(frame, f"Left {green_detected_left}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, (0, 0, 0))
 
             # Добавление текста на кадр (правая часть)
-            draw_text_with_background(
-                frame,
-                f"Right Detected: {green_detected_right}",
-                (width // 2 + 10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0) if green_detected_right else (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
-            draw_text_with_background(
-                frame,
-                f"Right Spray: {spray_active_right[i]}",
-                (width // 2 + 10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0) if spray_active_right[i] else (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
+            draw_text_with_background(frame, f"Right {green_detected_right}", (width - 200, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, (0, 0, 0))
 
-            # Вывод изображения в окно
-            if ENABLE_OUTPUT:
-                out.write(frame)
+        # Объединяем кадры
+        merged_frame = merge_frames(frames)
 
-            # Вывод изображения в окно OpenCV
-            if ENABLE_OUTPUT:
-                cv2.imshow(f"Camera {i+1}", frame)
+        # Отправка в RTSP вывод, если включено
+        if ENABLE_OUTPUT and out:
+            out.write(merged_frame)
 
-        # Обработка событий
-        if cv2.waitKey(1) == ord('q'):
+        # Отображение изображения для отладки
+        cv2.imshow("Merged Stream", merged_frame)
+
+        # Прерывание при нажатии клавиши ESC
+        if cv2.waitKey(1) & 0xFF == 27:
             break
 
-        # Ожидание, чтобы не нагружать процессор
-        time.sleep(0.01)
+        # Ожидаем 1/25 секунды, чтобы поддерживать 25 fps
+        time.sleep(1 / 25)
+
+    signal_handler(None, None)
 
 
 if __name__ == "__main__":
-    # Подключение обработчика сигнала для корректного завершения
+    # Обработчик сигнала SIGINT для корректного завершения программы
     signal.signal(signal.SIGINT, signal_handler)
     main()
