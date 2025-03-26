@@ -17,7 +17,7 @@ MIN_OBJECT_AREA = 150
 
 # Настройки RTSP
 # RTSP_URL = "rtsp://192.168.1.203:8555/main"
-RTSP_URL = "rtsp://admin:denis123@192.168.1.203:8555/main"
+RTSP_URL = "rtsp://admin:user12345@192.168.1.203:8555/main"
 
 RTSP_OUTPUT_PIPELINE = (
     # "appsrc ! videoconvert ! video/x-raw,format=I420 ! x264enc tune=zerolatency bitrate=1500 speed-preset=ultrafast "
