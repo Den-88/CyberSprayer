@@ -284,10 +284,10 @@ def main():
 
 
 
-            if ENABLE_OUTPUT and out:
-            # Объединяем кадры
-                merged_frame = merge_frames(frames)
-                out.write(merged_frame)
+        if ENABLE_OUTPUT and out:
+        # Объединяем кадры
+            merged_frame = merge_frames(frames)
+            out.write(merged_frame)
 
         # Логирование времени обработки кадра
         end_time = time.time()
