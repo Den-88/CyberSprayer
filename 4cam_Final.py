@@ -80,18 +80,18 @@ def draw_text_with_background(frame, text, position, font, scale, color, thickne
     cv2.putText(frame, text, (x, y), font, scale, color, thickness)
 
 
+import queue
+
 class FrameCaptureThread(threading.Thread):
     """Поток для захвата кадров из RTSP-потока."""
     def __init__(self, rtsp_url):
         threading.Thread.__init__(self)
-
         self.cap = cv2.VideoCapture(
             f"rtspsrc location={rtsp_url} protocols=tcp latency=0 ! rtph264depay ! h264parse ! openh264dec ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
             cv2.CAP_GSTREAMER
         )
 
-        self.frame = None
-        self.lock = threading.Lock()
+        self.frame_queue = queue.Queue(maxsize=1)  # Очередь из одного элемента (только последний кадр)
         self.running = True
 
     def run(self):
@@ -99,8 +99,10 @@ class FrameCaptureThread(threading.Thread):
         while self.running:
             ret, frame = self.cap.read()
             if ret:
-                with self.lock:
-                    self.frame = frame
+                # Очищаем очередь и добавляем только последний кадр
+                if not self.frame_queue.empty():
+                    self.frame_queue.get()  # Удаляем старый кадр
+                self.frame_queue.put(frame)  # Добавляем новый кадр
         self.cap.release()  # Освобождаем ресурс при завершении
 
     def stop(self):
@@ -109,9 +111,10 @@ class FrameCaptureThread(threading.Thread):
         self.join()
 
     def get_frame(self):
-        """Получение текущего кадра."""
-        with self.lock:
-            return self.frame
+        """Получение последнего доступного кадра."""
+        if not self.frame_queue.empty():
+            return self.frame_queue.get()
+        return None  # Если кадра пока нет, вернуть None
 
 
 def signal_handler(sig, frame):
