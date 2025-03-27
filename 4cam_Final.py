@@ -154,6 +154,8 @@ def process_frames(frames):
     spray_active = [[False] * num_parts for _ in range(len(RTSP_URLS))]
     spray_end_time = [[0] * num_parts for _ in range(len(RTSP_URLS))]
 
+    green_detected = [[False] * num_parts for _ in range(len(RTSP_URLS))]
+
     for i, frame in enumerate(frames):
         if frame is None:
             continue
@@ -168,17 +170,17 @@ def process_frames(frames):
             part_frame = frame[:, x_start:x_end]
 
             # Анализируем часть кадра
-            green_detected, contours = detect_green(part_frame, region=None)
+            green_detected[i,j], contours = detect_green(part_frame, region=None)
 
             # Логика работы форсунки для каждой части
-            if green_detected:
+            if green_detected[i,j]:
                 spray_active[i][j] = True
                 spray_end_time[i][j] = current_time + 0.3
             elif current_time > spray_end_time[i][j]:
                 spray_active[i][j] = False
 
             # Логирование
-            print(f"Camera {i+1} Part {j+1} Detected: {green_detected}, Spray: {spray_active[i][j]}")
+            print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i,j]}, Spray: {spray_active[i][j]}")
 
             if ENABLE_OUTPUT:
                 # Отрисовка контуров
@@ -238,16 +240,16 @@ def process_frames(frames):
                     # )
                     # Координаты кружков
                     circle1_center = (int(j * width / num_parts) + 50 , 50)  # Первый кружок
-                    circle2_center =(int(j * width / num_parts) + 50, 100)  # Второй кружок
+                    circle2_center = (int(j * width / num_parts) + 50, 100)  # Второй кружок
                     radius = 20  # Радиус кружков
 
                     # Цвета кружков
-                    circle1_color = (255, 0, 0) if green_detected else (0, 0, 255)  # Зеленый/красный
-                    circle2_color = (0, 255, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
+                    circle1_color = (0, 255, 0) if green_detected[i,j] else (0, 0, 255)  # Зеленый/красный
+                    circle2_color = (255, 0, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
 
                     # Рисуем кружки
                     cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
-                    cv2.circle(frame, circle2_center, radius, circle2_color, -1)
+                    cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
 
     if ENABLE_OUTPUT and out:
         # Объединяем кадры
