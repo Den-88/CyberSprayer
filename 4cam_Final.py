@@ -240,7 +240,7 @@ def main():
                 font_scale = 1.5
                 font_thickness = 2
                 text_color = (255, 255, 255)  # Белый цвет текста
-                offset = 10  # Отступ сверху
+                offset = 50  # Отступ сверху
 
                 for i in range(num_parts):
                     # Позиция для текста (центр каждой части)
