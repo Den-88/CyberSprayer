@@ -237,10 +237,10 @@ def main():
 
                 # Добавляем нумерацию сверху
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 1.5
+                font_scale = 3.5
                 font_thickness = 2
                 text_color = (255, 255, 255)  # Белый цвет текста
-                offset = 50  # Отступ сверху
+                offset = 100  # Отступ сверху
 
                 for i in range(num_parts):
                     # Позиция для текста (центр каждой части)
