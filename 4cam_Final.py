@@ -180,39 +180,63 @@ def process_frames(frames):
             # Логирование
             print(f"Camera {i+1} Part {j+1} Detected: {green_detected}, Spray: {spray_active[i][j]}")
 
-            # Отрисовка контуров
-            for contour in contours:
-                x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                area = cv2.contourArea(contour)
-                cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            if ENABLE_OUTPUT:
 
-            # Рисуем 7 вертикальных белых линий для разделения на 6 частей
-            height, width = frame.shape[:2]
-            # Количество частей
-            num_parts = 6
-            # Расстояние между линиями
-            line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
-            # Добавляем линии с самого левого и правого края
-            line_positions = [0] + line_positions + [width]
+                # Отрисовка контуров
+                for contour in contours:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    area = cv2.contourArea(contour)
+                    cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-            # Рисуем линии
-            for pos in line_positions:
-                cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
+                # Рисуем 7 вертикальных белых линий для разделения на 6 частей
+                height, width = frame.shape[:2]
+                # Количество частей
+                num_parts = 6
+                # Расстояние между линиями
+                line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
+                # Добавляем линии с самого левого и правого края
+                line_positions = [0] + line_positions + [width]
 
-            # Добавляем нумерацию сверху
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 3.5
-            font_thickness = 6
-            text_color = (0, 0, 255)  # Белый цвет текста
-            offset = 100  # Отступ сверху
+                # Рисуем линии
+                for pos in line_positions:
+                    cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
 
-            for j in range(num_parts):
-                # Позиция для текста (центр каждой части)
-                x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
-                # Текст (номер)
-                cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
-                            font_thickness)
+                # Добавляем нумерацию сверху
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                font_scale = 3.5
+                font_thickness = 6
+                text_color = (0, 0, 255)  # Белый цвет текста
+                offset = 100  # Отступ сверху
+
+                for j in range(num_parts):
+                    # Позиция для текста (центр каждой части)
+                    x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
+                    # Текст (номер)
+                    cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
+                                font_thickness)
+
+                    # Добавление текста на кадр
+                    draw_text_with_background(
+                        frame,
+                        f"Detected: {green_detected}",
+                        (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1,
+                        (0, 255, 0) if green_detected else (0, 0, 255),
+                        2,
+                        (0, 0, 0),
+                    )
+                    draw_text_with_background(
+                        frame,
+                        f"Spray: {spray_active[i][j]}",
+                        (10, 70),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1,
+                        (0, 255, 0) if spray_active[i][j] else (0, 0, 255),
+                        2,
+                        (0, 0, 0),
+                    )
 
 
     if ENABLE_OUTPUT and out:
