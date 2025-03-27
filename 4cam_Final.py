@@ -197,6 +197,8 @@ def main():
         current_time = time.time()
         elapsed_time = current_time - last_processed_time
 
+        print(f"elapsed_time {elapsed_time} frame_interval {frame_interval}.")
+
         if elapsed_time > frame_interval:
             frames_to_skip = int(elapsed_time / frame_interval)  # Сколько кадров пропустить
             print(f"Skipping {frames_to_skip} frames to catch up.")
