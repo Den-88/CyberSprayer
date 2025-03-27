@@ -331,9 +331,9 @@ def main():
         #         continue
 
         current_time = time.time()
-        print(f'current_time - last_processed_time {current_time - last_processed_time} frame_interval {frame_interval}')
-        if current_time - last_processed_time < frame_interval:
-            continue  # Ждём нужный интервал перед обработкой следующего кадра
+        # print(f'current_time - last_processed_time {current_time - last_processed_time} frame_interval {frame_interval}')
+        # if current_time - last_processed_time < frame_interval:
+        #     continue  # Ждём нужный интервал перед обработкой следующего кадра
 
         frames = [thread.get_frame() for thread in capture_threads]
         frames = [f for f in frames if f is not None]  # Фильтруем пустые кадры
