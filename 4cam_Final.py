@@ -86,24 +86,19 @@ class FrameCaptureThread(threading.Thread):
     """Поток для захвата кадров из RTSP-потока."""
     def __init__(self, rtsp_url):
         threading.Thread.__init__(self)
-        self.cap = cv2.VideoCapture(
-            f"rtspsrc location={rtsp_url} protocols=tcp latency=0 ! rtph264depay ! h264parse ! openh264dec ! queue max-size-buffers=1 ! videoconvert ! appsink sync=false",
-            cv2.CAP_GSTREAMER
-        )
-
-        self.frame_queue = queue.Queue(maxsize=1)  # Очередь из одного элемента (только последний кадр)
+        self.cap = cv2.VideoCapture(rtsp_url)
+        self.latest_frame = None  # Храним только последний кадр
         self.running = True
+        self.lock = threading.Lock()  # Блокировка для потокобезопасности
 
     def run(self):
         """Основной цикл потока для захвата кадров."""
         while self.running:
             ret, frame = self.cap.read()
             if ret:
-                # Очищаем очередь и добавляем только последний кадр
-                if not self.frame_queue.empty():
-                    self.frame_queue.get()  # Удаляем старый кадр
-                self.frame_queue.put(frame)  # Добавляем новый кадр
-        self.cap.release()  # Освобождаем ресурс при завершении
+                with self.lock:
+                    self.latest_frame = frame  # Сохраняем только последний кадр
+        self.cap.release()
 
     def stop(self):
         """Остановка потока."""
@@ -111,10 +106,9 @@ class FrameCaptureThread(threading.Thread):
         self.join()
 
     def get_frame(self):
-        """Получение последнего доступного кадра."""
-        if not self.frame_queue.empty():
-            return self.frame_queue.get()
-        return None  # Если кадра пока нет, вернуть None
+        """Получение последнего доступного кадра (не блокирующее)."""
+        with self.lock:
+            return self.latest_frame  # Просто возвращаем последний доступный кадр
 
 
 def signal_handler(sig, frame):
@@ -156,11 +150,16 @@ def main():
     global running, capture_threads, out
 
     # Запуск потоков захвата кадров для каждой камеры
-    capture_threads = []
-    for rtsp_url in RTSP_URLS:
-        thread = FrameCaptureThread(rtsp_url)
-        capture_threads.append(thread)
+    # capture_threads = []
+    # for rtsp_url in RTSP_URLS:
+    #     thread = FrameCaptureThread(rtsp_url)
+    #     capture_threads.append(thread)
+    #     thread.start()
+
+    capture_threads = [FrameCaptureThread(rtsp) for rtsp in RTSP_URLS]
+    for thread in capture_threads:
         thread.start()
+
 
     # Даем время потокам запуститься
     time.sleep(2)
