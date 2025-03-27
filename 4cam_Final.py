@@ -11,6 +11,8 @@ ARDUINO_PORT = "/dev/ttyUSB0"  # Порт Arduino
 LED_PIN = 13                   # Пин для светодиода
 RELAY_PIN_1 = 2                # Пин для реле 1 (левая часть)
 RELAY_PIN_2 = 3                # Пин для реле 2 (правая часть)
+RELAY_PIN_3 = 4                # Пин для реле 1 (левая часть)
+RELAY_PIN_4 = 5                # Пин для реле 2 (правая часть)
 
 # Минимальная площадь объекта для обнаружения (в пикселях)
 MIN_OBJECT_AREA = 150
@@ -181,6 +183,12 @@ def process_frames(frames):
 
             # Логирование
             print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
+            # Управление Arduino
+            board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
+            board.digital[RELAY_PIN_1].write(not spray_active[0][0])  # Реле 1 (левая часть)
+            board.digital[RELAY_PIN_2].write(not spray_active[0][1])  # Реле 2 (правая часть)
+            board.digital[RELAY_PIN_3].write(not spray_active[0][2])  # Реле 2 (правая часть)
+            board.digital[RELAY_PIN_4].write(not spray_active[0][3])  # Реле 2 (правая часть)
 
             if ENABLE_OUTPUT:
                 # Отрисовка контуров
