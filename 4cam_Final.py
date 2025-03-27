@@ -222,10 +222,10 @@ def main():
                 # # Рисуем вертикальную белую линию посередине
                 # height, width = frame.shape[:2]
                 # cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
-                # Рисуем 9 вертикальных белых линий для разделения на 8 частей
+                # Рисуем 7 вертикальных белых линий для разделения на 6 частей
                 height, width = frame.shape[:2]
                 # Количество частей
-                num_parts = 8
+                num_parts = 6
                 # Расстояние между линиями
                 line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
                 # Добавляем линии с самого левого и правого края
@@ -239,14 +239,14 @@ def main():
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 font_scale = 3.5
                 font_thickness = 6
-                text_color = (255, 0, 0)  # Белый цвет текста
+                text_color = (0, 0, 255)  # Белый цвет текста
                 offset = 100  # Отступ сверху
 
                 for j in range(num_parts):
                     # Позиция для текста (центр каждой части)
                     x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
                     # Текст (номер)
-                    cv2.putText(frame, str(i * 8 - 8 + j + 1), (x_position, offset), font, font_scale, text_color, font_thickness)
+                    cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color, font_thickness)
 
                 # Обводка зеленых объектов на левой половине и отображение площади
                 for contour in contours_left:
