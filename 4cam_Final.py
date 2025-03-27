@@ -210,9 +210,9 @@ def main():
                 continue  # Пропускаем, если кадра нет
             frames.append(frame)
 
-        if not frames:
-            continue  # Если кадров нет, пропускаем итерацию
-        else:
+        for i, frame in enumerate(frames):
+            if frame is None:
+                continue
 
             # Анализ левой половины кадра
             green_detected_left, contours_left = detect_green(frame, region="left")
