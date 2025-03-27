@@ -170,17 +170,17 @@ def process_frames(frames):
             part_frame = frame[:, x_start:x_end]
 
             # Анализируем часть кадра
-            green_detected[i,j], contours = detect_green(part_frame, region=None)
+            green_detected[i][j], contours = detect_green(part_frame, region=None)
 
             # Логика работы форсунки для каждой части
-            if green_detected[i,j]:
+            if green_detected[i][j]:
                 spray_active[i][j] = True
                 spray_end_time[i][j] = current_time + 0.3
             elif current_time > spray_end_time[i][j]:
                 spray_active[i][j] = False
 
             # Логирование
-            print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i,j]}, Spray: {spray_active[i][j]}")
+            print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
 
             if ENABLE_OUTPUT:
                 # Отрисовка контуров
@@ -244,7 +244,7 @@ def process_frames(frames):
                     radius = 20  # Радиус кружков
 
                     # Цвета кружков
-                    circle1_color = (0, 255, 0) if green_detected[i,j] else (0, 0, 255)  # Зеленый/красный
+                    circle1_color = (0, 255, 0) if green_detected[i][j] else (0, 0, 255)  # Зеленый/красный
                     circle2_color = (255, 0, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
 
                     # Рисуем кружки
