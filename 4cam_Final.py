@@ -221,6 +221,8 @@ def main():
             print(f"Camera {i+1} Left Detected: {green_detected_left}, Spray: {spray_active_left[i]}")
             print(f"Camera {i+1} Right Detected: {green_detected_right}, Spray: {spray_active_right[i]}")
 
+        # Отправка в RTSP вывод, если включено
+        if ENABLE_OUTPUT and out:
             # Обводка зеленых объектов на левой половине и отображение площади
             for contour in contours_left:
                 x, y, w, h = cv2.boundingRect(contour)
@@ -279,9 +281,6 @@ def main():
                 2,
                 (0, 0, 0),
             )
-
-        # Отправка в RTSP вывод, если включено
-        if ENABLE_OUTPUT and out:
             # Объединяем кадры
             merged_frame = merge_frames(frames)
             out.write(merged_frame)
