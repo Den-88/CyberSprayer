@@ -190,8 +190,8 @@ def process_frames(frames):
             area = cv2.contourArea(contour)
             cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         # Объединяем кадры
-            merged_frame = merge_frames(frames)
-            out.write(merged_frame)
+        merged_frame = merge_frames(frames)
+        out.write(merged_frame)
 
 
         # # Анализ левой половины кадра
