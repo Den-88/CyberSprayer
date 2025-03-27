@@ -221,69 +221,73 @@ def main():
             print(f"Camera {i+1} Left Detected: {green_detected_left}, Spray: {spray_active_left[i]}")
             print(f"Camera {i+1} Right Detected: {green_detected_right}, Spray: {spray_active_right[i]}")
 
-        # Отправка в RTSP вывод, если включено
-        if ENABLE_OUTPUT and out:
-            # Обводка зеленых объектов на левой половине и отображение площади
-            for contour in contours_left:
-                x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                area = cv2.contourArea(contour)
-                cv2.putText(frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            # Отправка в RTSP вывод, если включено
+            if ENABLE_OUTPUT and out:
+                # Обводка зеленых объектов на левой половине и отображение площади
+                for contour in contours_left:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    area = cv2.contourArea(contour)
+                    cv2.putText(frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-            # Обводка зеленых объектов на правой половине и отображение площади
-            for contour in contours_right:
-                x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
-                area = cv2.contourArea(contour)
-                cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0),
-                            2)
+                # Обводка зеленых объектов на правой половине и отображение площади
+                for contour in contours_right:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
+                    area = cv2.contourArea(contour)
+                    cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0),
+                                2)
 
-            # Добавление текста на кадр (левая часть)
-            draw_text_with_background(
-                frame,
-                f"Left Detected: {green_detected_left}",
-                (10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0) if green_detected_left else (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
-            draw_text_with_background(
-                frame,
-                f"Left Spray: {spray_active_left}",
-                (10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0) if spray_active_left else (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
+                # Добавление текста на кадр (левая часть)
+                draw_text_with_background(
+                    frame,
+                    f"Left Detected: {green_detected_left}",
+                    (10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 0) if green_detected_left else (0, 0, 255),
+                    2,
+                    (0, 0, 0),
+                )
+                draw_text_with_background(
+                    frame,
+                    f"Left Spray: {spray_active_left}",
+                    (10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 0) if spray_active_left else (0, 0, 255),
+                    2,
+                    (0, 0, 0),
+                )
 
-            # Добавление текста на кадр (правая часть)
-            draw_text_with_background(
-                frame,
-                f"Right Detected: {green_detected_right}",
-                (width // 2 + 10, 30),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0) if green_detected_right else (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
-            draw_text_with_background(
-                frame,
-                f"Right Spray: {spray_active_right}",
-                (width // 2 + 10, 70),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (0, 255, 0) if spray_active_right else (0, 0, 255),
-                2,
-                (0, 0, 0),
-            )
+                # Добавление текста на кадр (правая часть)
+                draw_text_with_background(
+                    frame,
+                    f"Right Detected: {green_detected_right}",
+                    (width // 2 + 10, 30),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 0) if green_detected_right else (0, 0, 255),
+                    2,
+                    (0, 0, 0),
+                )
+                draw_text_with_background(
+                    frame,
+                    f"Right Spray: {spray_active_right}",
+                    (width // 2 + 10, 70),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    1,
+                    (0, 255, 0) if spray_active_right else (0, 0, 255),
+                    2,
+                    (0, 0, 0),
+                )
+
+
+
+            if ENABLE_OUTPUT and out:
             # Объединяем кадры
-            merged_frame = merge_frames(frames)
-            out.write(merged_frame)
+                merged_frame = merge_frames(frames)
+                out.write(merged_frame)
 
         # Логирование времени обработки кадра
         end_time = time.time()
