@@ -29,7 +29,7 @@ RTSP_OUTPUT_PIPELINE = (
 )
 
 # Флаг для включения/отключения вывода изображения
-ENABLE_OUTPUT = False  # По умолчанию вывод отключен
+ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
@@ -233,14 +233,52 @@ def main():
                 x, y, w, h = cv2.boundingRect(contour)
                 cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
                 area = cv2.contourArea(contour)
-                cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0),
+                            2)
 
             # Добавление текста на кадр (левая часть)
-            draw_text_with_background(frame, f"Left {green_detected_left}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, (0, 0, 0))
+            draw_text_with_background(
+                frame,
+                f"Left Detected: {green_detected_left}",
+                (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0) if green_detected_left else (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
+            draw_text_with_background(
+                frame,
+                f"Left Spray: {spray_active_left}",
+                (10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0) if spray_active_left else (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
 
             # Добавление текста на кадр (правая часть)
-            draw_text_with_background(frame, f"Right {green_detected_right}", (width - 200, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, (0, 0, 0))
-
+            draw_text_with_background(
+                frame,
+                f"Right Detected: {green_detected_right}",
+                (width // 2 + 10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0) if green_detected_right else (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
+            draw_text_with_background(
+                frame,
+                f"Right Spray: {spray_active_right}",
+                (width // 2 + 10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (0, 255, 0) if spray_active_right else (0, 0, 255),
+                2,
+                (0, 0, 0),
+            )
         # Объединяем кадры
         merged_frame = merge_frames(frames)
 
@@ -248,17 +286,16 @@ def main():
         if ENABLE_OUTPUT and out:
             out.write(merged_frame)
 
-        # Отображение изображения для отладки
-        cv2.imshow("Merged Stream", merged_frame)
+        # Логирование времени обработки кадра
+        end_time = time.time()
+        print(f"Frame processed in {end_time - start_time:.4f} seconds")
 
-        # Прерывание при нажатии клавиши ESC
-        if cv2.waitKey(1) & 0xFF == 27:
-            break
-
-        # Ожидаем 1/25 секунды, чтобы поддерживать 25 fps
-        time.sleep(1 / 25)
-
-    signal_handler(None, None)
+    # Завершение работы
+    for thread in capture_threads:
+        thread.stop()
+    if ENABLE_OUTPUT:
+        out.release()
+    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
