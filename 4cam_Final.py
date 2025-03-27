@@ -187,10 +187,6 @@ def main():
             if frame is None:
                 continue
 
-            # Рисуем вертикальную белую линию посередине
-            height, width = frame.shape[:2]
-            cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
-
             # Анализ левой половины кадра
             green_detected_left, contours_left = detect_green(frame, region="left")
             current_time = time.time()
@@ -223,6 +219,10 @@ def main():
 
             # Отправка в RTSP вывод, если включено
             if ENABLE_OUTPUT and out:
+                # Рисуем вертикальную белую линию посередине
+                height, width = frame.shape[:2]
+                cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
+
                 # Обводка зеленых объектов на левой половине и отображение площади
                 for contour in contours_left:
                     x, y, w, h = cv2.boundingRect(contour)
