@@ -29,7 +29,7 @@ RTSP_OUTPUT_PIPELINE = (
 )
 
 # Флаг для включения/отключения вывода изображения
-ENABLE_OUTPUT = False  # По умолчанию вывод отключен
+ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
@@ -190,8 +190,9 @@ def process_frames(frames):
                     area = cv2.contourArea(contour)
                     cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
                 # Объединяем кадры
-                merged_frame = merge_frames(frames)
-                out.write(merged_frame)
+                if i == 0 and j == 0:
+                    merged_frame = merge_frames(frames)
+                    out.write(merged_frame)
 
 
         # # Анализ левой половины кадра
