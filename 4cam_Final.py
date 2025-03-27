@@ -243,7 +243,7 @@ def process_frames(frames):
                     radius = 20  # Радиус кружков
 
                     # Цвета кружков
-                    circle1_color = (0, 255, 0) if green_detected else (0, 0, 255)  # Зеленый/красный
+                    circle1_color = (255, 0, 0) if green_detected else (0, 0, 255)  # Зеленый/красный
                     # circle2_color = (0, 255, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
 
                     # Рисуем кружки
