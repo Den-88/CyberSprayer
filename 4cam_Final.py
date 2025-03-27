@@ -219,9 +219,18 @@ def main():
 
             # Отправка в RTSP вывод, если включено
             if ENABLE_OUTPUT and out:
-                # Рисуем вертикальную белую линию посередине
+                # # Рисуем вертикальную белую линию посередине
+                # height, width = frame.shape[:2]
+                # cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
+                # Рисуем 7 вертикальных белых линий для разделения на 8 частей
                 height, width = frame.shape[:2]
-                cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
+                # Количество частей
+                num_parts = 8
+                # Расстояние между линиями
+                line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
+                # Рисуем линии
+                for pos in line_positions:
+                    cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
 
                 # Обводка зеленых объектов на левой половине и отображение площади
                 for contour in contours_left:
