@@ -19,8 +19,8 @@ MIN_OBJECT_AREA = 150
 RTSP_URLS = [
     "rtsp://admin:user12345@192.168.1.201:8555/main",  # Камера 1
     "rtsp://admin:user12345@192.168.1.203:8555/main",  # Камера 2
-    "rtsp://admin:user12345@192.168.1.201:8555/main",  # Камера 3
-    "rtsp://admin:user12345@192.168.1.203:8555/main",  # Камера 4
+    # "rtsp://admin:user12345@192.168.1.201:8555/main",  # Камера 3
+    # "rtsp://admin:user12345@192.168.1.203:8555/main",  # Камера 4
 ]
 
 RTSP_OUTPUT_PIPELINE = (
