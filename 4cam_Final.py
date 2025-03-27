@@ -308,7 +308,7 @@ def main():
 
     # Инициализация RTSP-вывода, если вывод включен
     if ENABLE_OUTPUT:
-        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (10240 // 4, 1440 // 4), True)
+        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 1, (10240 // 4, 1440 // 4), True)
 
     # Основной цикл обработки кадров
     running = True
