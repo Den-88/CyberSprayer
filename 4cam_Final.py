@@ -180,12 +180,18 @@ def process_frames(frames):
             # Логирование
             print(f"Camera {i+1} Part {j+1} Detected: {green_detected}, Spray: {spray_active[i][j]}")
 
-            # Отрисовка контуров
-            for contour in contours:
-                x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                area = cv2.contourArea(contour)
-                cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+
+            if ENABLE_OUTPUT and out:
+                # Отрисовка контуров
+                for contour in contours:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    area = cv2.contourArea(contour)
+                    cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                # Объединяем кадры
+                merged_frame = merge_frames(frames)
+                out.write(merged_frame)
 
 
         # # Анализ левой половины кадра
@@ -309,10 +315,6 @@ def process_frames(frames):
         #     #     (0, 0, 0),
         #     # )
 
-    if ENABLE_OUTPUT and out:
-        # Объединяем кадры
-        merged_frame = merge_frames(frames)
-        out.write(merged_frame)
 
 
 def main():
