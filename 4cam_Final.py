@@ -331,6 +331,7 @@ def main():
         #         continue
 
         current_time = time.time()
+        print(f'current_time - last_processed_time {current_time - last_processed_time} frame_interval {frame_interval}')
         if current_time - last_processed_time < frame_interval:
             continue  # Ждём нужный интервал перед обработкой следующего кадра
 
