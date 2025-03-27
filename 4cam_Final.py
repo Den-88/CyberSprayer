@@ -238,15 +238,15 @@ def main():
                 # Добавляем нумерацию сверху
                 font = cv2.FONT_HERSHEY_SIMPLEX
                 font_scale = 3.5
-                font_thickness = 2
-                text_color = (255, 255, 255)  # Белый цвет текста
+                font_thickness = 6
+                text_color = (255, 0, 0)  # Белый цвет текста
                 offset = 100  # Отступ сверху
 
-                for i in range(num_parts):
+                for j in range(num_parts):
                     # Позиция для текста (центр каждой части)
-                    x_position = int((i * width / num_parts) + (width / num_parts / 2) - 10)
+                    x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
                     # Текст (номер)
-                    cv2.putText(frame, str(i + 1), (x_position, offset), font, font_scale, text_color, font_thickness)
+                    cv2.putText(frame, str(i * 8 - 8 + j + 1), (x_position, offset), font, font_scale, text_color, font_thickness)
 
                 # Обводка зеленых объектов на левой половине и отображение площади
                 for contour in contours_left:
