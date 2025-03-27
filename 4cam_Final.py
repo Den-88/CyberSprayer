@@ -216,28 +216,39 @@ def process_frames(frames):
                     cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
                                 font_thickness)
 
-                    # Добавление текста на кадр
-                    draw_text_with_background(
-                        frame,
-                        f"Detected: {green_detected}",
-                        (10, 30),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1,
-                        (0, 255, 0) if green_detected else (0, 0, 255),
-                        2,
-                        (0, 0, 0),
-                    )
-                    draw_text_with_background(
-                        frame,
-                        f"Spray: {spray_active[i][j]}",
-                        (10, 70),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        1,
-                        (0, 255, 0) if spray_active[i][j] else (0, 0, 255),
-                        2,
-                        (0, 0, 0),
-                    )
+                    # # Добавление текста на кадр
+                    # draw_text_with_background(
+                    #     frame,
+                    #     f"Detected: {green_detected}",
+                    #     (10, 30),
+                    #     cv2.FONT_HERSHEY_SIMPLEX,
+                    #     1,
+                    #     (0, 255, 0) if green_detected else (0, 0, 255),
+                    #     2,
+                    #     (0, 0, 0),
+                    # )
+                    # draw_text_with_background(
+                    #     frame,
+                    #     f"Spray: {spray_active[i][j]}",
+                    #     (10, 70),
+                    #     cv2.FONT_HERSHEY_SIMPLEX,
+                    #     1,
+                    #     (0, 255, 0) if spray_active[i][j] else (0, 0, 255),
+                    #     2,
+                    #     (0, 0, 0),
+                    # )
+                    # Координаты кружков
+                    circle1_center = (50, 50)  # Первый кружок
+                    circle2_center = (50, 100)  # Второй кружок
+                    radius = 20  # Радиус кружков
 
+                    # Цвета кружков
+                    circle1_color = (0, 255, 0) if green_detected else (0, 0, 255)  # Зеленый/красный
+                    circle2_color = (0, 255, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
+
+                    # Рисуем кружки
+                    cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
+                    cv2.circle(frame, circle2_center, radius, circle2_color, -1)
 
     if ENABLE_OUTPUT and out:
         # Объединяем кадры
