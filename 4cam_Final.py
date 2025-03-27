@@ -181,7 +181,6 @@ def process_frames(frames):
             print(f"Camera {i+1} Part {j+1} Detected: {green_detected}, Spray: {spray_active[i][j]}")
 
             if ENABLE_OUTPUT:
-
                 # Отрисовка контуров
                 for contour in contours:
                     x, y, w, h = cv2.boundingRect(contour)
@@ -239,16 +238,16 @@ def process_frames(frames):
                     # )
                     # Координаты кружков
                     circle1_center = (int(j * width / num_parts) + 50 , 50)  # Первый кружок
-                    # circle2_center = (50, 100)  # Второй кружок
+                    circle2_center =(int(j * width / num_parts) + 50, 100)  # Второй кружок
                     radius = 20  # Радиус кружков
 
                     # Цвета кружков
                     circle1_color = (255, 0, 0) if green_detected else (0, 0, 255)  # Зеленый/красный
-                    # circle2_color = (0, 255, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
+                    circle2_color = (255, 0, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
 
                     # Рисуем кружки
                     cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
-                    # cv2.circle(frame, circle2_center, radius, circle2_color, -1)
+                    cv2.circle(frame, circle2_center, radius, circle2_color, -1)
 
     if ENABLE_OUTPUT and out:
         # Объединяем кадры
