@@ -150,9 +150,43 @@ spray_active_right = [False] * 4
 spray_end_time_right = [0] * 4
 
 def process_frames(frames):
+    num_parts = 6  # Количество частей кадра
+    spray_active = [[False] * num_parts for _ in range(len(RTSP_URLS))]
+    spray_end_time = [[0] * num_parts for _ in range(len(RTSP_URLS))]
+
     for i, frame in enumerate(frames):
         if frame is None:
             continue
+
+        height, width = frame.shape[:2]
+        part_width = width // num_parts
+        current_time = time.time()
+
+        for j in range(num_parts):
+            x_start = j * part_width
+            x_end = (j + 1) * part_width if j < num_parts - 1 else width
+            part_frame = frame[:, x_start:x_end]
+
+            # Анализируем часть кадра
+            green_detected, contours = detect_green(part_frame, region=None)
+
+            # Логика работы форсунки для каждой части
+            if green_detected:
+                spray_active[i][j] = True
+                spray_end_time[i][j] = current_time + 0.3
+            elif current_time > spray_end_time[i][j]:
+                spray_active[i][j] = False
+
+            # Логирование
+            print(f"Camera {i+1} Part {j+1} Detected: {green_detected}, Spray: {spray_active[i][j]}")
+
+            # Отрисовка контуров
+            for contour in contours:
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                area = cv2.contourArea(contour)
+                cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
 
         # # Анализ левой половины кадра
         # green_detected_left, contours_left = detect_green(frame, region="left")
@@ -185,95 +219,95 @@ def process_frames(frames):
         # print(f"Camera {i + 1} Right Detected: {green_detected_right}, Spray: {spray_active_right[i]}")
 
         # Отправка в RTSP вывод, если включено
-        if ENABLE_OUTPUT and out:
-            # # Рисуем вертикальную белую линию посередине
-            # height, width = frame.shape[:2]
-            # cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
-            # Рисуем 7 вертикальных белых линий для разделения на 6 частей
-            height, width = frame.shape[:2]
-            # Количество частей
-            num_parts = 6
-            # Расстояние между линиями
-            line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
-            # Добавляем линии с самого левого и правого края
-            line_positions = [0] + line_positions + [width]
-
-            # Рисуем линии
-            for pos in line_positions:
-                cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
-
-            # Добавляем нумерацию сверху
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 3.5
-            font_thickness = 6
-            text_color = (0, 0, 255)  # Белый цвет текста
-            offset = 100  # Отступ сверху
-
-            for j in range(num_parts):
-                # Позиция для текста (центр каждой части)
-                x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
-                # Текст (номер)
-                cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
-                            font_thickness)
-
-            # # Обводка зеленых объектов на левой половине и отображение площади
-            # for contour in contours_left:
-            #     x, y, w, h = cv2.boundingRect(contour)
-            #     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            #     area = cv2.contourArea(contour)
-            #     cv2.putText(frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-            #
-            # # Обводка зеленых объектов на правой половине и отображение площади
-            # for contour in contours_right:
-            #     x, y, w, h = cv2.boundingRect(contour)
-            #     cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
-            #     area = cv2.contourArea(contour)
-            #     cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0),
-            #                 2)
-            #
-            # # Добавление текста на кадр (левая часть)
-            # draw_text_with_background(
-            #     frame,
-            #     f"Left Detected: {green_detected_left}",
-            #     (10, 30),
-            #     cv2.FONT_HERSHEY_SIMPLEX,
-            #     1,
-            #     (0, 255, 0) if green_detected_left else (0, 0, 255),
-            #     2,
-            #     (0, 0, 0),
-            # )
-            # draw_text_with_background(
-            #     frame,
-            #     f"Left Spray: {spray_active_left}",
-            #     (10, 70),
-            #     cv2.FONT_HERSHEY_SIMPLEX,
-            #     1,
-            #     (0, 255, 0) if spray_active_left else (0, 0, 255),
-            #     2,
-            #     (0, 0, 0),
-            # )
-            #
-            # # Добавление текста на кадр (правая часть)
-            # draw_text_with_background(
-            #     frame,
-            #     f"Right Detected: {green_detected_right}",
-            #     (width // 2 + 10, 30),
-            #     cv2.FONT_HERSHEY_SIMPLEX,
-            #     1,
-            #     (0, 255, 0) if green_detected_right else (0, 0, 255),
-            #     2,
-            #     (0, 0, 0),
-            # )
-            # draw_text_with_background(
-            #     frame,
-            #     f"Right Spray: {spray_active_right}",
-            #     (width // 2 + 10, 70),
-            #     cv2.FONT_HERSHEY_SIMPLEX,
-            #     1,
-            #     (0, 255, 0) if spray_active_right else (0, 0, 255),
-            #     2,
-            #     (0, 0, 0),
-            # )
+        # if ENABLE_OUTPUT and out:
+        #     # # Рисуем вертикальную белую линию посередине
+        #     # height, width = frame.shape[:2]
+        #     # cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
+        #     # Рисуем 7 вертикальных белых линий для разделения на 6 частей
+        #     height, width = frame.shape[:2]
+        #     # Количество частей
+        #     num_parts = 6
+        #     # Расстояние между линиями
+        #     line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
+        #     # Добавляем линии с самого левого и правого края
+        #     line_positions = [0] + line_positions + [width]
+        #
+        #     # Рисуем линии
+        #     for pos in line_positions:
+        #         cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
+        #
+        #     # Добавляем нумерацию сверху
+        #     font = cv2.FONT_HERSHEY_SIMPLEX
+        #     font_scale = 3.5
+        #     font_thickness = 6
+        #     text_color = (0, 0, 255)  # Белый цвет текста
+        #     offset = 100  # Отступ сверху
+        #
+        #     for j in range(num_parts):
+        #         # Позиция для текста (центр каждой части)
+        #         x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
+        #         # Текст (номер)
+        #         cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
+        #                     font_thickness)
+        #
+        #     # # Обводка зеленых объектов на левой половине и отображение площади
+        #     # for contour in contours_left:
+        #     #     x, y, w, h = cv2.boundingRect(contour)
+        #     #     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        #     #     area = cv2.contourArea(contour)
+        #     #     cv2.putText(frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        #     #
+        #     # # Обводка зеленых объектов на правой половине и отображение площади
+        #     # for contour in contours_right:
+        #     #     x, y, w, h = cv2.boundingRect(contour)
+        #     #     cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
+        #     #     area = cv2.contourArea(contour)
+        #     #     cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0),
+        #     #                 2)
+        #     #
+        #     # # Добавление текста на кадр (левая часть)
+        #     # draw_text_with_background(
+        #     #     frame,
+        #     #     f"Left Detected: {green_detected_left}",
+        #     #     (10, 30),
+        #     #     cv2.FONT_HERSHEY_SIMPLEX,
+        #     #     1,
+        #     #     (0, 255, 0) if green_detected_left else (0, 0, 255),
+        #     #     2,
+        #     #     (0, 0, 0),
+        #     # )
+        #     # draw_text_with_background(
+        #     #     frame,
+        #     #     f"Left Spray: {spray_active_left}",
+        #     #     (10, 70),
+        #     #     cv2.FONT_HERSHEY_SIMPLEX,
+        #     #     1,
+        #     #     (0, 255, 0) if spray_active_left else (0, 0, 255),
+        #     #     2,
+        #     #     (0, 0, 0),
+        #     # )
+        #     #
+        #     # # Добавление текста на кадр (правая часть)
+        #     # draw_text_with_background(
+        #     #     frame,
+        #     #     f"Right Detected: {green_detected_right}",
+        #     #     (width // 2 + 10, 30),
+        #     #     cv2.FONT_HERSHEY_SIMPLEX,
+        #     #     1,
+        #     #     (0, 255, 0) if green_detected_right else (0, 0, 255),
+        #     #     2,
+        #     #     (0, 0, 0),
+        #     # )
+        #     # draw_text_with_background(
+        #     #     frame,
+        #     #     f"Right Spray: {spray_active_right}",
+        #     #     (width // 2 + 10, 70),
+        #     #     cv2.FONT_HERSHEY_SIMPLEX,
+        #     #     1,
+        #     #     (0, 255, 0) if spray_active_right else (0, 0, 255),
+        #     #     2,
+        #     #     (0, 0, 0),
+        #     # )
 
     if ENABLE_OUTPUT and out:
         # Объединяем кадры
