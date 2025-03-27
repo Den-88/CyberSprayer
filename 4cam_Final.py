@@ -238,8 +238,8 @@ def process_frames(frames):
                     #     (0, 0, 0),
                     # )
                     # Координаты кружков
-                    circle1_center = (50, 50)  # Первый кружок
-                    circle2_center = (50, 100)  # Второй кружок
+                    circle1_center = ((j * width / num_parts) + 50 , 50)  # Первый кружок
+                    circle2_center = ((j * width / num_parts) + 50, 100)  # Второй кружок
                     radius = 20  # Радиус кружков
 
                     # Цвета кружков
