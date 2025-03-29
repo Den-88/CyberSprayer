@@ -55,14 +55,15 @@ def update_status(i, j, detected, active):
     """Обновляет строку состояния без размазывания текста."""
     global last_length
 
+    # Индекс текущей строки в статусе
     index = i * num_parts + j
     status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={detected} Spray={active}"
 
     # Собираем строку
     output = " | ".join(status_line)
 
-    # Очищаем старый вывод, заполняя пробелами
-    sys.stdout.write("\r" + " " * last_length + "\r")
+    # Очищаем старый вывод
+    sys.stdout.write("\r" + " " * last_length + "\r")  # Очистка предыдущей строки
 
     # Выводим новую строку
     sys.stdout.write(output)
@@ -70,9 +71,6 @@ def update_status(i, j, detected, active):
 
     # Запоминаем длину строки
     last_length = len(output)
-
-    # Лог для отладки (если нужно)
-    print(f"Updating: {output}")
 
 
 def detect_green(frame):
