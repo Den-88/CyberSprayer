@@ -38,7 +38,7 @@ green_detected = [[False] * num_parts for _ in range(len(RTSP_URLS))]
 RTSP_OUTPUT_PIPELINE = (
     "appsrc ! queue max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! "
     "videoconvert ! video/x-raw,format=NV12 ! "
-    "x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=15 "
+    "x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
     "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test latency=0"
 )
 
@@ -286,9 +286,9 @@ def process_frame(i, frame):
             # Отрисовка контуров
             for contour in contours:
                 x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                cv2.rectangle(frame_copy, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 area = cv2.contourArea(contour)
-                cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(frame_copy, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
             # Рисуем 7 вертикальных белых линий для разделения на 6 частей
             height, width = frame_copy.shape[:2]
@@ -349,7 +349,7 @@ def main():
 
     # Инициализация RTSP-вывода, если вывод включен
     if ENABLE_OUTPUT:
-        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 4, (10240 // 4, 1440 // 4), True)
+        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (10240 // 4, 1440 // 4), True)
 
     # Основной цикл обработки кадров
     running = True
