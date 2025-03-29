@@ -57,27 +57,26 @@ def clear_screen():
 
 
 def update_status(i, j, detected, active):
-    """Обновляет строку состояния с построчной перерисовкой."""
+    """Обновляет строку состояния с полной перерисовкой экрана."""
     # Индекс текущей строки в статусе
     index = i * num_parts + j
 
-    # Преобразуем значения в строки
-    green_status = "True" if detected else "False"
+    # Проверяем значение active и присваиваем корректное значение
     spray_status = "True" if active else "False"
+    green_status = "True" if detected else "False"
 
-    # Формируем строку для статуса
+    # Отладочная информация
+    print(f"Updating Cam {i + 1} Part {j + 1}: Green={green_status} Spray={spray_status}")
+
+    # Обновление строки состояния с правильными значениями
     status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={green_status} Spray={spray_status}"
 
     # Собираем строку с каждой записью в новой строке
     output = "\n".join(status_line)
 
-    # Очистка только текущей строки, чтобы избежать моргания
-    sys.stdout.write(f"\r{status_line[index]}")
+    # Обновляем вывод без ошибок
+    sys.stdout.write("\r" + output)  # Возврат каретки и вывод обновленного текста
     sys.stdout.flush()
-
-    # Пауза, чтобы увидеть изменения (опционально)
-    time.sleep(0.1)
-
 
 
 def detect_green(frame):
