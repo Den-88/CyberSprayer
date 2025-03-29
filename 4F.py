@@ -37,18 +37,11 @@ ENABLE_OUTPUT = False  # По умолчанию вывод отключен
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
 
-def detect_green(frame, region=None):
+def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
-
-    return False, []
     if frame is None:
         return False, []  # Если кадра нет, ничего не делать
 
-    # Если указана область, обрезаем кадр
-    if region == "left":
-        frame = frame[:, :frame.shape[1] // 2]  # Левая половина
-    elif region == "right":
-        frame = frame[:, frame.shape[1] // 2:]  # Правая половина
 
     # Преобразуем кадр в HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -155,7 +148,7 @@ def process_frames(frames):
             part_frame = frame[:, x_start:x_end]
 
             # Анализируем часть кадра
-            green_detected[i][j], contours = detect_green(part_frame, region=None)
+            green_detected[i][j], contours = detect_green(part_frame)
 
             # Логика работы форсунки для каждой части
             if green_detected[i][j]:
