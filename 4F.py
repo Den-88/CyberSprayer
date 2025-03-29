@@ -2,7 +2,6 @@ import concurrent
 import os
 import threading
 import time
-from turtledemo.penrose import start
 
 import cv2
 import numpy as np
