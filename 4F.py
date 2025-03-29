@@ -1,4 +1,5 @@
 import concurrent
+import os
 import threading
 import time
 import cv2
@@ -49,12 +50,13 @@ ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 board = Arduino(ARDUINO_PORT)
 
 status_line = [""] * (len(RTSP_URLS) * num_parts)
-last_length = 0  # Длина предыдущего вывода
+
+def clear_screen():
+    """Очистка экрана перед выводом обновленных данных."""
+    os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
 
 def update_status(i, j, detected, active):
-    """Обновляет строку состояния без размазывания текста."""
-    global last_length
-
+    """Обновляет строку состояния с полной перерисовкой экрана."""
     # Индекс текущей строки в статусе
     index = i * num_parts + j
     status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={detected} Spray={active}"
@@ -62,12 +64,12 @@ def update_status(i, j, detected, active):
     # Собираем строку
     output = " | ".join(status_line)
 
-    # Очистить строку, используя '\r' для возврата курсора в начало
-    sys.stdout.write("\r" + output)
-    sys.stdout.flush()
+    # Очистка экрана и вывод новой строки
+    clear_screen()
 
-    # Запоминаем длину текущего вывода
-    last_length = len(output)
+    # Выводим обновленную строку состояния
+    sys.stdout.write(output)
+    sys.stdout.flush()
 
 
 def detect_green(frame):
