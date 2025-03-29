@@ -64,11 +64,9 @@ def update_status(i, j, detected, active):
     # Собираем строку с каждой записью в новой строке
     output = "\n".join(status_line)
 
-    # Очистка экрана и вывод новой строки
-    clear_screen()
-
-    # Выводим обновленную строку состояния
-    sys.stdout.write(output)
+    # Выводим обновленную строку состояния без очистки экрана
+    sys.stdout.write("\033[F" * len(status_line))  # Перемещение курсора на количество строк
+    sys.stdout.write(output + "\n")  # Вывод обновленного текста
     sys.stdout.flush()
 
 
