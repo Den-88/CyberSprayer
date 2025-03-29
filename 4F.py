@@ -64,10 +64,11 @@ def update_status(i, j, detected, active):
     # Собираем строку с каждой записью в новой строке
     output = "\n".join(status_line)
 
-    # Выводим обновленную строку состояния без очистки экрана
+    # Обновляем вывод без ошибок
     sys.stdout.write("\033[F" * len(status_line))  # Перемещение курсора на количество строк
     sys.stdout.write(output + "\n")  # Вывод обновленного текста
     sys.stdout.flush()
+
 
 
 def detect_green(frame):
