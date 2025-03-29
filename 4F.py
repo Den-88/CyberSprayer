@@ -62,34 +62,41 @@ RESET = '\033[0m'   # Сброс цвета
 
 # Функция для обновления статуса
 def update_status(i, j, detected, active):
-    """Обновляет строку статуса без перерисовки всей таблицы."""
+    """Обновляет строку статуса, перерисовывая только измененные части."""
     index = i * num_parts + j
     if index < len(status_line):  # Проверка на выход за пределы
-        status_line[index] = (detected, active)
+        current_status = status_line[index]
+
+        # Если произошли изменения, обновляем
+        if current_status != (detected, active):
+            status_line[index] = (detected, active)
+            # Обновляем только одну строку
+            update_single_line(i, j, detected, active)
     else:
         print(f"Ошибка: Индекс {index} выходит за пределы списка!")
         return
 
-    # Обновляем только нужную часть таблицы для зеленого и форсунки
-    sys.stdout.write("\033[F" * len(RTSP_URLS))  # Перемещаем каретку вверх (чтобы переписать)
-    for i in range(len(RTSP_URLS)):
-        for j in range(num_parts):
-            index = i * num_parts + j
-            green_status = "ДА " if status_line[index][0] else "НЕТ"
-            spray_status = "ВКЛ " if status_line[index][1] else "ВЫКЛ"
 
-            # Применяем цвета
-            green_color = GREEN if status_line[index][0] else RED
-            spray_color = GREEN if status_line[index][1] else RED
+# Функция для обновления только одной строки
+def update_single_line(i, j, detected, active):
+    """Обновляет только одну строку в таблице."""
+    green_status = "ДА " if detected else "НЕТ"
+    spray_status = "ВКЛ " if active else "ВЫКЛ"
 
-            # Формируем строку с обновленным статусом
-            nozzle_number = (i * num_parts) + (j + 1)
-            nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
+    # Применяем цвета
+    green_color = GREEN if detected else RED
+    spray_color = GREEN if active else RED
 
-            # Перерисовываем только измененную строку
-            sys.stdout.write(
-                f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}\n")
-            sys.stdout.flush()
+    nozzle_number = (i * num_parts) + (j + 1)
+    nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
+
+    # Переход в начало строки
+    sys.stdout.write("\033[F")
+    # Обновляем строку
+    sys.stdout.write(
+        f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}\n")
+    sys.stdout.flush()
+
 
 # Функция для отображения статуса
 def display_status(status_line):
@@ -116,7 +123,6 @@ def display_status(status_line):
             # Выводим строку
             print(
                 f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}")
-
 
 def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
