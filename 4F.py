@@ -192,7 +192,7 @@ class FrameCaptureThread(threading.Thread):
         self.cap = cv2.VideoCapture(rtsp_url)
         self.latest_frame = None  # Храним только последний кадр
         self.running = True
-        # self.sleep_interval = sleep_interval  # Интервал для слипа (в секундах)
+        self.sleep_interval = sleep_interval  # Интервал для слипа (в секундах)
 
     def run(self):
         """Основной цикл потока для захвата кадров."""
@@ -200,7 +200,7 @@ class FrameCaptureThread(threading.Thread):
             ret, frame = self.cap.read()
             if ret:
                 self.latest_frame = frame  # Сохраняем только последний кадр
-            time.sleep(self.sleep_interval)  # Добавляем задержку, чтобы не перегружать процессор
+            # time.sleep(self.sleep_interval)  # Добавляем задержку, чтобы не перегружать процессор
         self.cap.release()
 
     def stop(self):
