@@ -55,19 +55,22 @@ def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
     os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
 
+# Инициализация статусных строк
+status_lines = [f"Cam {i+1} Part {j+1}: Green=False Spray=False"
+               for i in range(4) for j in range(num_parts)]
 
 def update_status(i, j, detected, active):
-    """Обновляет статус с правильным форматированием"""
+    """Обновляет конкретную строку статуса без мерцания"""
     index = i * num_parts + j
-    spray_status = "True" if active else "False"
-    green_status = "True" if detected else "False"
+    new_line = f"Cam {i + 1} Part {j + 1}: Green={'True' if detected else 'False'} Spray={'True' if active else 'False'}"
 
-    status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={green_status} Spray={spray_status}"
+    if status_lines[index] != new_line:
+        status_lines[index] = new_line
 
-    # Очистка и вывод
-    sys.stdout.write("\033[H\033[J")  # Очистка экрана
-    sys.stdout.write("\n".join(status_line))
-    sys.stdout.flush()
+        # Перемещаем курсор к нужной строке
+        sys.stdout.write(f"\033[{index + 1}H")  # +1 потому что терминалы 1-based
+        sys.stdout.write(new_line.ljust(len(new_line) + 2))  # +2 чтобы затереть возможные артефакты
+        sys.stdout.flush()
 
 
 def detect_green(frame):
