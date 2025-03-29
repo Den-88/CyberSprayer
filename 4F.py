@@ -286,9 +286,9 @@ def process_frame(i, frame):
             # Отрисовка контуров
             for contour in contours:
                 x, y, w, h = cv2.boundingRect(contour)
-                cv2.rectangle(frame_copy, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                cv2.rectangle(frame_copy, (x_start + x, y), (x_start + x + w, y + h), (0, 255, 0), 2)
                 area = cv2.contourArea(contour)
-                cv2.putText(frame_copy, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                cv2.putText(frame_copy, f"S = {area}", (x_start + x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
             # Рисуем 7 вертикальных белых линий для разделения на 6 частей
             height, width = frame_copy.shape[:2]
