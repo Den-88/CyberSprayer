@@ -1,3 +1,4 @@
+import concurrent
 import threading
 import time
 import cv2
@@ -40,7 +41,6 @@ def detect_green(frame, region=None):
     """Обнаружение зеленого цвета на кадре или его части."""
 
     return False, []
-
     if frame is None:
         return False, []  # Если кадра нет, ничего не делать
 
@@ -73,7 +73,6 @@ class FrameCaptureThread(threading.Thread):
         threading.Thread.__init__(self)
         self.cap = cv2.VideoCapture(rtsp_url)
         self.latest_frame = None  # Храним только последний кадр
-        self.ready_for_processing = threading.Event()  # Сигнал для обработки
         self.running = True
         self.lock = threading.Lock()  # Блокировка для потокобезопасности
 
@@ -84,10 +83,6 @@ class FrameCaptureThread(threading.Thread):
             if ret:
                 with self.lock:
                     self.latest_frame = frame  # Сохраняем только последний кадр
-                self.ready_for_processing.set()  # Сигнализируем, что кадр готов
-            else:
-                time.sleep(0.01)  # Небольшая задержка, если кадр не получен
-
         self.cap.release()
 
     def stop(self):
@@ -98,12 +93,7 @@ class FrameCaptureThread(threading.Thread):
     def get_frame(self):
         """Получение последнего доступного кадра (не блокирующее)."""
         with self.lock:
-            return self.latest_frame
-
-    def wait_for_frame(self):
-        """Ожидание, пока кадр не будет готов для обработки."""
-        self.ready_for_processing.wait()
-        self.ready_for_processing.clear()  # Сбрасываем сигнал
+            return self.latest_frame  # Просто возвращаем последний доступный кадр
 
 
 def signal_handler(sig, frame):
@@ -218,27 +208,6 @@ def process_frames(frames):
                     cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
                                 font_thickness)
 
-                    # # Добавление текста на кадр
-                    # draw_text_with_background(
-                    #     frame,
-                    #     f"Detected: {green_detected}",
-                    #     (10, 30),
-                    #     cv2.FONT_HERSHEY_SIMPLEX,
-                    #     1,
-                    #     (0, 255, 0) if green_detected else (0, 0, 255),
-                    #     2,
-                    #     (0, 0, 0),
-                    # )
-                    # draw_text_with_background(
-                    #     frame,
-                    #     f"Spray: {spray_active[i][j]}",
-                    #     (10, 70),
-                    #     cv2.FONT_HERSHEY_SIMPLEX,
-                    #     1,
-                    #     (0, 255, 0) if spray_active[i][j] else (0, 0, 255),
-                    #     2,
-                    #     (0, 0, 0),
-                    # )
                     # Координаты кружков
                     circle1_center = (int(j * width / num_parts) + 50 , 50)  # Первый кружок
                     circle2_center = (int(j * width / num_parts) + 50, 100)  # Второй кружок
@@ -256,130 +225,6 @@ def process_frames(frames):
         # Объединяем кадры
         merged_frame = merge_frames(frames)
         out.write(merged_frame)
-
-
-        # # Анализ левой половины кадра
-        # green_detected_left, contours_left = detect_green(frame, region="left")
-        # current_time = time.time()
-        #
-        # # Логика работы форсунки для левой части
-        # if green_detected_left:
-        #     spray_active_left[i] = True
-        #     spray_end_time_left[i] = current_time + 0.3  # Таймер на 0.3 секунды
-        # elif current_time > spray_end_time_left[i]:
-        #     spray_active_left[i] = False
-        #
-        # # Анализ правой половины кадра
-        # green_detected_right, contours_right = detect_green(frame, region="right")
-        #
-        # # Логика работы форсунки для правой части
-        # if green_detected_right:
-        #     spray_active_right[i] = True
-        #     spray_end_time_right[i] = current_time + 0.3  # Таймер на 0.3 секунды
-        # elif current_time > spray_end_time_right[i]:
-        #     spray_active_right[i] = False
-
-        # # Управление Arduino
-        # board.digital[LED_PIN].write(green_detected_left or green_detected_right)  # Светодиод
-        # board.digital[RELAY_PIN_1].write(not spray_active_left[i])  # Реле 1 (левая часть)
-        # board.digital[RELAY_PIN_2].write(not spray_active_right[i])  # Реле 2 (правая часть)
-
-        # Логирование
-        # print(f"Camera {i + 1} Left Detected: {green_detected_left}, Spray: {spray_active_left[i]}")
-        # print(f"Camera {i + 1} Right Detected: {green_detected_right}, Spray: {spray_active_right[i]}")
-
-        # Отправка в RTSP вывод, если включено
-        # if ENABLE_OUTPUT and out:
-        #     # # Рисуем вертикальную белую линию посередине
-        #     # height, width = frame.shape[:2]
-        #     # cv2.line(frame, (width // 2, 0), (width // 2, height), (255, 255, 255), 2)
-        #     # Рисуем 7 вертикальных белых линий для разделения на 6 частей
-        #     height, width = frame.shape[:2]
-        #     # Количество частей
-        #     num_parts = 6
-        #     # Расстояние между линиями
-        #     line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
-        #     # Добавляем линии с самого левого и правого края
-        #     line_positions = [0] + line_positions + [width]
-        #
-        #     # Рисуем линии
-        #     for pos in line_positions:
-        #         cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
-        #
-        #     # Добавляем нумерацию сверху
-        #     font = cv2.FONT_HERSHEY_SIMPLEX
-        #     font_scale = 3.5
-        #     font_thickness = 6
-        #     text_color = (0, 0, 255)  # Белый цвет текста
-        #     offset = 100  # Отступ сверху
-        #
-        #     for j in range(num_parts):
-        #         # Позиция для текста (центр каждой части)
-        #         x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
-        #         # Текст (номер)
-        #         cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
-        #                     font_thickness)
-        #
-        #     # # Обводка зеленых объектов на левой половине и отображение площади
-        #     # for contour in contours_left:
-        #     #     x, y, w, h = cv2.boundingRect(contour)
-        #     #     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        #     #     area = cv2.contourArea(contour)
-        #     #     cv2.putText(frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        #     #
-        #     # # Обводка зеленых объектов на правой половине и отображение площади
-        #     # for contour in contours_right:
-        #     #     x, y, w, h = cv2.boundingRect(contour)
-        #     #     cv2.rectangle(frame, (x + width // 2, y), (x + width // 2 + w, y + h), (0, 255, 0), 2)
-        #     #     area = cv2.contourArea(contour)
-        #     #     cv2.putText(frame, f"S = {area}", (x + width // 2, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0),
-        #     #                 2)
-        #     #
-        #     # # Добавление текста на кадр (левая часть)
-        #     # draw_text_with_background(
-        #     #     frame,
-        #     #     f"Left Detected: {green_detected_left}",
-        #     #     (10, 30),
-        #     #     cv2.FONT_HERSHEY_SIMPLEX,
-        #     #     1,
-        #     #     (0, 255, 0) if green_detected_left else (0, 0, 255),
-        #     #     2,
-        #     #     (0, 0, 0),
-        #     # )
-        #     # draw_text_with_background(
-        #     #     frame,
-        #     #     f"Left Spray: {spray_active_left}",
-        #     #     (10, 70),
-        #     #     cv2.FONT_HERSHEY_SIMPLEX,
-        #     #     1,
-        #     #     (0, 255, 0) if spray_active_left else (0, 0, 255),
-        #     #     2,
-        #     #     (0, 0, 0),
-        #     # )
-        #     #
-        #     # # Добавление текста на кадр (правая часть)
-        #     # draw_text_with_background(
-        #     #     frame,
-        #     #     f"Right Detected: {green_detected_right}",
-        #     #     (width // 2 + 10, 30),
-        #     #     cv2.FONT_HERSHEY_SIMPLEX,
-        #     #     1,
-        #     #     (0, 255, 0) if green_detected_right else (0, 0, 255),
-        #     #     2,
-        #     #     (0, 0, 0),
-        #     # )
-        #     # draw_text_with_background(
-        #     #     frame,
-        #     #     f"Right Spray: {spray_active_right}",
-        #     #     (width // 2 + 10, 70),
-        #     #     cv2.FONT_HERSHEY_SIMPLEX,
-        #     #     1,
-        #     #     (0, 255, 0) if spray_active_right else (0, 0, 255),
-        #     #     2,
-        #     #     (0, 0, 0),
-        #     # )
-
-
 
 def main():
     """Основная функция программы."""
@@ -406,17 +251,15 @@ def main():
     running = True
     while running:
         current_time = time.time()
-
-        # Ожидаем, пока кадры будут готовы для обработки
         for thread in capture_threads:
-            thread.wait_for_frame()
+            process_frames([thread.get_frame()])
 
-        frames = [thread.get_frame() for thread in capture_threads]
-        frames = [f for f in frames if f is not None]  # Фильтруем пустые кадры
-        if frames:
-            process_frames(frames)  # Функция обработки
-
+        # frames = [thread.get_frame() for thread in capture_threads]
+        # frames = [f for f in frames if f is not None]  # Фильтруем пустые кадры
+        # if frames:
+        #     process_frames(frames)  # Функция обработки
         last_processed_time = time.time()  # Обновляем таймер
+
         print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
     # Завершение работы
@@ -425,7 +268,6 @@ def main():
     if ENABLE_OUTPUT:
         out.release()
     cv2.destroyAllWindows()
-
 
 
 if __name__ == "__main__":
