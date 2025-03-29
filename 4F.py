@@ -213,15 +213,13 @@ def process_frames(frames):
 
 
 async def capture_frame(rtsp_url):
-    """Асинхронный захват кадра с RTSP-потока."""
     cap = cv2.VideoCapture(rtsp_url)
     while True:
         ret, frame = cap.read()
         if not ret:
             print(f"Ошибка при захвате кадра с {rtsp_url}")
             break
-        yield frame
-        await asyncio.sleep(0.05)  # Небольшая задержка для уменьшения нагрузки на процессор
+        yield frame  # Асинхронно возвращаем кадр
 
 async def main():
     print("Запуск программы...")
