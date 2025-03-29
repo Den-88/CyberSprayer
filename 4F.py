@@ -356,6 +356,7 @@ def process_frame(i, frame):
     return frame_copy
 
 def main():
+    clear_screen()
     """Основная функция программы."""
     global running, capture_threads, out
 
