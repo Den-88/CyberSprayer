@@ -127,6 +127,8 @@ def merge_frames(frames):
     return merged_frame
 
 def process_frames(frames):
+    global num_parts, spray_active, spray_end_time, green_detected  # Указываем, что это глобальная переменная
+
     for i, frame in enumerate(frames):
         if frame is None:
             continue
