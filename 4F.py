@@ -91,8 +91,11 @@ def display_status(status_line):
             green_color = GREEN if status_line[index][0] else RED
             spray_color = GREEN if status_line[index][1] else RED
 
+            nozzle_number = (i + 1) * (j + 1)
+            nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
+
             print(
-                f"Форсунка {(i + 1) * (j + 1)} {" " if (i + 1) * (j + 1) <10 else ""}| Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET} | {spray_color}{spray_status: <6}{RESET}")
+                f"Форсунка {nozzle_number_str}| Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET} | {spray_color}{spray_status: <6}{RESET}")
 
 
 def detect_green(frame):
