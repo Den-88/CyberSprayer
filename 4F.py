@@ -49,15 +49,9 @@ ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
 
-status_line = [""] * (len(RTSP_URLS) * num_parts)
-
 def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
     os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
-
-# Инициализация статусных строк
-status_lines = [f"Cam {i+1} Part {j+1}: Green=False Spray=False"
-               for i in range(4) for j in range(num_parts)]
 
 def display_status(status_line):
     """Выводит состояние в виде таблицы."""
