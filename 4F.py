@@ -361,8 +361,8 @@ def process_frame(i, frame, start_time):
         # Логирование
         # print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
         finish_time = time.time()
-
-        update_status(i, j, green_detected[i][j], spray_active[i][j], f"{start_time - finish_time}:.4f сек.")
+        processing_time = f"{finish_time - start_time:.4f} сек."
+        update_status(i, j, green_detected[i][j], spray_active[i][j], processing_time)
 
         # Управление Arduino
         board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
