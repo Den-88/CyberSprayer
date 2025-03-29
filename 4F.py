@@ -362,7 +362,7 @@ def process_frame(i, frame, start_time):
         # print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
         finish_time = time.time()
 
-        update_status(i, j, green_detected[i][j], spray_active[i][j], start_time - finish_time)
+        update_status(i, j, green_detected[i][j], spray_active[i][j], f"{start_time - finish_time}:.4f сек.")
 
         # Управление Arduino
         board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
@@ -459,7 +459,7 @@ def main():
                     frames.append(process_frame(i, frame, start_time))  # Обрабатываем только измененные
 
                 else:
-                    print("Кадр не поменялся!")
+                    # print("Кадр не поменялся!")
                     frames.append(previous_frames[i])  # Если кадр не изменился, используем старый
 
             # Объединяем кадры
