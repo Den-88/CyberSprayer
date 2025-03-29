@@ -59,18 +59,36 @@ def clear_screen():
 status_lines = [f"Cam {i+1} Part {j+1}: Green=False Spray=False"
                for i in range(4) for j in range(num_parts)]
 
+def display_status(status_line):
+    """Выводит состояние в виде таблицы."""
+    # Заголовки таблицы
+    headers = "Cam/Part   Green   Spray"
+    print(headers)
+    print("-" * len(headers))  # Разделитель
+
+    # Вывод строк статуса
+    for i in range(4):
+        for j in range(num_parts):
+            # Индекс строки
+            index = i * num_parts + j
+            green_status = "True" if status_line[index][0] else "False"
+            spray_status = "True" if status_line[index][1] else "False"
+
+            # Форматированный вывод каждой строки
+            print(f"Cam {i + 1} Part {j + 1} | {green_status: <6} | {spray_status: <6}")
+
 def update_status(i, j, detected, active):
-    """Обновляет конкретную строку статуса без мерцания"""
+    """Обновляет строку статуса с перерисовкой таблицы."""
+    # Индекс текущей строки в статусе
     index = i * num_parts + j
-    new_line = f"Cam {i + 1} Part {j + 1}: Green={'True' if detected else 'False'} Spray={'True' if active else 'False'}"
+    status_line[index] = (detected, active)
 
-    if status_lines[index] != new_line:
-        status_lines[index] = new_line
+    # Очистка экрана и вывод таблицы
+    sys.stdout.write("\033c")  # Очистить экран (кросс-платформенно)
+    display_status(status_line)
 
-        # Перемещаем курсор к нужной строке
-        sys.stdout.write(f"\033[{index + 1}H")  # +1 потому что терминалы 1-based
-        sys.stdout.write(new_line.ljust(len(new_line) + 2))  # +2 чтобы затереть возможные артефакты
-        sys.stdout.flush()
+    # Пауза, чтобы увидеть изменения (опционально)
+    time.sleep(0.1)
 
 
 def detect_green(frame):
