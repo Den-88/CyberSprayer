@@ -53,6 +53,7 @@ def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
     os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
 
+status_line = [(False, False)] * (4 * num_parts)
 def display_status(status_line):
     """Выводит состояние в виде таблицы."""
     # Заголовки таблицы
