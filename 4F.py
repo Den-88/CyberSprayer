@@ -67,22 +67,49 @@ def detect_green(frame):
     # Возвращаем результат и отфильтрованные контуры
     return len(filtered_contours) > 0, filtered_contours
 
+# class FrameCaptureThread(threading.Thread):
+#     """Поток для захвата кадров из RTSP-потока."""
+#     def __init__(self, rtsp_url):
+#         threading.Thread.__init__(self)
+#         self.cap = cv2.VideoCapture(rtsp_url)
+#         self.latest_frame = None  # Храним только последний кадр
+#         self.running = True
+#         # self.lock = threading.Lock()  # Блокировка для потокобезопасности
+#
+#     def run(self):
+#         """Основной цикл потока для захвата кадров."""
+#         while self.running:
+#             ret, frame = self.cap.read()
+#             if ret:
+#                 # with self.lock:
+#                 self.latest_frame = frame  # Сохраняем только последний кадр
+#         self.cap.release()
+#
+#     def stop(self):
+#         """Остановка потока."""
+#         self.running = False
+#         self.join()
+#
+#     def get_frame(self):
+#         """Получение последнего доступного кадра (не блокирующее)."""
+#         # with self.lock:
+#         return self.latest_frame  # Просто возвращаем последний доступный кадр
 class FrameCaptureThread(threading.Thread):
     """Поток для захвата кадров из RTSP-потока."""
-    def __init__(self, rtsp_url):
+    def __init__(self, rtsp_url, sleep_interval=0.1):
         threading.Thread.__init__(self)
         self.cap = cv2.VideoCapture(rtsp_url)
         self.latest_frame = None  # Храним только последний кадр
         self.running = True
-        # self.lock = threading.Lock()  # Блокировка для потокобезопасности
+        self.sleep_interval = sleep_interval  # Интервал для слипа (в секундах)
 
     def run(self):
         """Основной цикл потока для захвата кадров."""
         while self.running:
             ret, frame = self.cap.read()
             if ret:
-                # with self.lock:
                 self.latest_frame = frame  # Сохраняем только последний кадр
+            time.sleep(self.sleep_interval)  # Добавляем задержку, чтобы не перегружать процессор
         self.cap.release()
 
     def stop(self):
@@ -92,7 +119,6 @@ class FrameCaptureThread(threading.Thread):
 
     def get_frame(self):
         """Получение последнего доступного кадра (не блокирующее)."""
-        # with self.lock:
         return self.latest_frame  # Просто возвращаем последний доступный кадр
 
 def signal_handler(sig, frame):
