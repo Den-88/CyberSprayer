@@ -57,21 +57,15 @@ def clear_screen():
 
 
 def update_status(i, j, detected, active):
-    """Обновляет строку состояния с полной перерисовкой экрана."""
-    # Индекс текущей строки в статусе
+    """Обновляет статус с правильным форматированием"""
     index = i * num_parts + j
-
-    # Проверяем значение active и присваиваем корректное значение
     spray_status = "True" if active else "False"
     green_status = "True" if detected else "False"
 
-    # Обновление строки состояния
     status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={green_status} Spray={spray_status}"
 
-    # Очищаем экран (перемещаем курсор в начало)
-    sys.stdout.write("\033[H")  # Перемещение курсора в верхний левый угол
-
-    # Выводим все строки статуса
+    # Очистка и вывод
+    sys.stdout.write("\033[H\033[J")  # Очистка экрана
     sys.stdout.write("\n".join(status_line))
     sys.stdout.flush()
 
