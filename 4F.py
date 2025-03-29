@@ -62,7 +62,7 @@ status_lines = [f"Cam {i+1} Part {j+1}: Green=False Spray=False"
 def display_status(status_line):
     """Выводит состояние в виде таблицы."""
     # Заголовки таблицы
-    headers = "Cam/Part   Green   Spray"
+    headers = "Cam/Part   |  Green  |  Spray  "
     print(headers)
     print("-" * len(headers))  # Разделитель
 
@@ -74,8 +74,8 @@ def display_status(status_line):
             green_status = "True" if status_line[index][0] else "False"
             spray_status = "True" if status_line[index][1] else "False"
 
-            # Форматированный вывод каждой строки
-            print(f"Cam {i + 1} Part {j + 1} | {green_status: <6} | {spray_status: <6}")
+            # Форматированный вывод каждой строки с выравниванием по центру
+            print(f"Cam {i + 1: <2} Part {j + 1: <2} | {green_status: <6} | {spray_status: <6}")
 
 def update_status(i, j, detected, active):
     """Обновляет строку статуса с перерисовкой таблицы."""
