@@ -218,7 +218,7 @@ async def main():
     capture_threads = [FrameCaptureThread(rtsp) for rtsp in RTSP_URLS]
 
     # Запускаем захват кадров в асинхронных задачах
-    tasks = [thread.run() for thread in capture_threads]
+    tasks = [asyncio.create_task(thread.run()) for thread in capture_threads]
     await asyncio.gather(*tasks)
 
     # for thread in capture_threads:
@@ -238,6 +238,8 @@ async def main():
         out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (10240 // 4, 1440 // 4), True)
 
     # Основной цикл обработки кадров
+    print(f"+++")
+
     running = True
     while running:
         current_time = time.time()
@@ -253,6 +255,7 @@ async def main():
             out.write(merged_frame)
         else:
             for thread in capture_threads:
+                print(f"Frame process")
                 frame = thread.get_frame()
                 process_frames([frame])
 
