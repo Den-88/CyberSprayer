@@ -1,4 +1,3 @@
-import asyncio
 import concurrent
 import threading
 import time
@@ -46,7 +45,7 @@ board = Arduino(ARDUINO_PORT)
 def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
 
-    # return False, []
+    return False, []
     if frame is None:
         return False, []  # Если кадра нет, ничего не делать
 
@@ -77,15 +76,14 @@ class FrameCaptureThread(threading.Thread):
         self.running = True
         # self.lock = threading.Lock()  # Блокировка для потокобезопасности
 
-    async def run(self):
+    def run(self):
         """Основной цикл потока для захвата кадров."""
         while self.running:
             ret, frame = self.cap.read()
             if ret:
                 # with self.lock:
                 self.latest_frame = frame  # Сохраняем только последний кадр
-        # self.cap.release()
-        await asyncio.sleep(0.05)  # Задержка, чтобы не перегружать процессор
+        self.cap.release()
 
     def stop(self):
         """Остановка потока."""
@@ -211,62 +209,57 @@ def process_frames(frames):
                     cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
                     cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
 
-
-async def capture_frame(rtsp_url):
-    cap = cv2.VideoCapture(rtsp_url)
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            print(f"Ошибка при захвате кадра с {rtsp_url}")
-            break
-        yield frame  # Асинхронно возвращаем кадр
-
-async def main():
-    print("Запуск программы...")
-
+def main():
+    """Основная функция программы."""
     global running, capture_threads, out
 
-    # Запуск захвата кадров для каждой камеры
-    tasks = [capture_frame(rtsp_url) for rtsp_url in RTSP_URLS]
-    frames = [asyncio.create_task(task.__anext__()) for task in tasks]
+    capture_threads = [FrameCaptureThread(rtsp) for rtsp in RTSP_URLS]
+    for thread in capture_threads:
+        thread.start()
+
+    # Даем время потокам запуститься
+    time.sleep(2)
+
+    for thread in capture_threads:
+        if not thread.cap.isOpened():
+            print("Ошибка: невозможно открыть RTSP-поток. Завершаем программу.")
+            thread.stop()
+            sys.exit(1)
 
     # Инициализация RTSP-вывода, если вывод включен
     if ENABLE_OUTPUT:
         out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (10240 // 4, 1440 // 4), True)
 
-    while True:
+    # Основной цикл обработки кадров
+    running = True
+    while running:
         current_time = time.time()
+        if ENABLE_OUTPUT and out:
+            frames = []
+            for thread in capture_threads:
+                frame = thread.get_frame()
+                process_frames([frame])
+                frames.append(frame)
+            # Объединяем кадры
+            merged_frame = merge_frames(frames)
+            out.write(merged_frame)
+        else:
+            for thread in capture_threads:
+                frame = thread.get_frame()
+                process_frames([frame])
 
-        # Получаем кадры по очереди из каждого RTSP потока
-        done, pending = await asyncio.wait(frames, return_when=asyncio.FIRST_COMPLETED)
-
-        frames_list = []  # Список для кадров
-        for task in done:
-            frame = task.result()
-            if frame is not None:
-                process_frames([frame])  # Обрабатываем кадр
-                frames_list.append(frame)  # Добавляем кадр в список
-
-        # Перезапускаем ожидание новых кадров для каждого потока
-        for task in pending:
-            task.cancel()
-        frames = [asyncio.create_task(task.__anext__()) for task in tasks]
-
-        # Если вывод включен, объединяем кадры и записываем их в выходной поток
-        if ENABLE_OUTPUT:
-            if frames_list:
-                merged_frame = merge_frames(frames_list)  # Объединяем кадры
-                out.write(merged_frame)  # Записываем в выходной видеопоток
-
-        # Логируем время обработки каждого кадра
-        last_processed_time = time.time()
+        last_processed_time = time.time()  # Обновляем таймер
         print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
+    # Завершение работы
+    for thread in capture_threads:
+        thread.stop()
     if ENABLE_OUTPUT:
         out.release()
     cv2.destroyAllWindows()
 
+
 if __name__ == "__main__":
     # Обработчик сигнала SIGINT для корректного завершения программы
     signal.signal(signal.SIGINT, signal_handler)
-    asyncio.run(main())
+    main()
