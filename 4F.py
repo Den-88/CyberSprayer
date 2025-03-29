@@ -369,6 +369,7 @@ def main():
                     frames.append(process_frame(i, frame))  # Обрабатываем только измененные
 
                 else:
+                    print("Кадр не поменялся!")
                     frames.append(previous_frames[i])  # Если кадр не изменился, используем старый
 
             # Объединяем кадры
