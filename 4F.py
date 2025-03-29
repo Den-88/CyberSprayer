@@ -52,6 +52,7 @@ board = Arduino(ARDUINO_PORT)
 def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
     os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
+    init_display()
 
 # status_line = [(False, False)] * (len(RTSP_URLS) * num_parts)
 # Цвета для вывода
