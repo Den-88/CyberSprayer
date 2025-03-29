@@ -2,6 +2,8 @@ import concurrent
 import os
 import threading
 import time
+from turtledemo.penrose import start
+
 import cv2
 import numpy as np
 from pyfirmata2 import Arduino
@@ -70,7 +72,7 @@ line_positions = {}
 def init_display():
     """Инициализация дисплея с таблицей и запоминанием позиций строк."""
     sys.stdout.write("\033[?25l")  # Скрыть курсор
-    headers = "Форсунка    | Камера             | Зелёный обнаружен? | Форсунка включена? "
+    headers = "Форсунка    | Камера             | Зелёный обнаружен? | Форсунка включена? | Время обработки кадра "
     print(headers)
     print("-" * len(headers))
 
@@ -88,11 +90,10 @@ def init_display():
 
             print(
                 f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {'НЕТ': <6}             | {'ВЫКЛ': <6}")
-
     sys.stdout.flush()
 
 
-def update_status(i, j, detected, active):
+def update_status(i, j, detected, active, time):
     """Обновляет только нужные статусы без перерисовки всей таблицы."""
     index = i * num_parts + j
     if index >= len(status_line):
@@ -122,7 +123,8 @@ def update_status(i, j, detected, active):
     new_line = (
         f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | "
         f"{green_color}{green_status: <6}{RESET}             | "
-        f"{spray_color}{spray_status: <6}{RESET}"
+        f"{spray_color}{spray_status: <6}{RESET}             | "
+        f"{time}"
     )
 
     # Перемещаем курсор и обновляем строку
@@ -326,7 +328,7 @@ def merge_frames(frames):
 #                     cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
 #                     cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
 
-def process_frame(i, frame):
+def process_frame(i, frame, start_time):
     global num_parts, spray_active, spray_end_time, green_detected  # Указываем, что это глобальная переменная
 
     # for i, frame in enumerate(frames):
@@ -359,7 +361,9 @@ def process_frame(i, frame):
 
         # Логирование
         # print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
-        update_status(i, j, green_detected[i][j], spray_active[i][j])
+        finish_time = time.time()
+
+        update_status(i, j, green_detected[i][j], spray_active[i][j], start_time - finish_time)
 
         # Управление Arduino
         board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
@@ -443,7 +447,7 @@ def main():
     previous_frames = [None] * len(capture_threads)  # Сохраняем предыдущие кадры
 
     while running:
-        current_time = time.time()
+        start_time = time.time()
 
         if ENABLE_OUTPUT and out:
             frames = []
@@ -453,7 +457,7 @@ def main():
                 # Проверяем, изменился ли кадр
                 if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
                     previous_frames[i] = frame.copy()  # Обновляем предыдущий кадр
-                    frames.append(process_frame(i, frame))  # Обрабатываем только измененные
+                    frames.append(process_frame(i, frame, start_time))  # Обрабатываем только измененные
 
                 else:
                     print("Кадр не поменялся!")
@@ -469,7 +473,7 @@ def main():
 
                 if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
                     previous_frames[i] = frame.copy()
-                    process_frame(i, frame)
+                    process_frame(i, frame, start_time)
 
         last_processed_time = time.time()  # Обновляем таймер
         # print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
