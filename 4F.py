@@ -31,9 +31,15 @@ spray_active = [[False] * num_parts for _ in range(len(RTSP_URLS))]
 spray_end_time = [[0] * num_parts for _ in range(len(RTSP_URLS))]
 green_detected = [[False] * num_parts for _ in range(len(RTSP_URLS))]
 
+# RTSP_OUTPUT_PIPELINE = (
+#     "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
+#     "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
+# )
 RTSP_OUTPUT_PIPELINE = (
-    "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
-    "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
+    "appsrc ! queue max-size-buffers=1 max-size-time=0 max-size-bytes=0 ! "
+    "videoconvert ! video/x-raw,format=NV12 ! "
+    "x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=15 "
+    "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test latency=0"
 )
 
 # Флаг для включения/отключения вывода изображения
