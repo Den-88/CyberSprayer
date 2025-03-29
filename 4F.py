@@ -95,7 +95,7 @@ def display_status(status_line):
             nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
 
             print(
-                f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET} | {spray_color}{spray_status: <6}{RESET}")
+                f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}            | {spray_color}{spray_status: <6}{RESET}")
 
 
 def detect_green(frame):
