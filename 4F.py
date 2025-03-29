@@ -238,9 +238,9 @@ def main():
     while running:
         current_time = time.time()
         for thread in capture_threads:
-            # process_frames([thread.get_frame()])
+            process_frames([thread.get_frame()])
             # print(str(thread.get_frame()))
-            process_frame([thread.get_frame()])
+            # process_frame([thread.get_frame()])
 
         # frames = [thread.get_frame() for thread in capture_threads]
         # frames = [f for f in frames if f is not None]  # Фильтруем пустые кадры
