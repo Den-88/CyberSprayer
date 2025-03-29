@@ -353,21 +353,35 @@ def main():
 
     # Основной цикл обработки кадров
     running = True
+    previous_frames = [None] * len(capture_threads)  # Сохраняем предыдущие кадры
+
     while running:
         current_time = time.time()
+
         if ENABLE_OUTPUT and out:
             frames = []
             for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
-                # process_frame(i, frame)
-                frames.append(process_frame(i, frame))
+
+                # Проверяем, изменился ли кадр
+                if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
+                    previous_frames[i] = frame.copy()  # Обновляем предыдущий кадр
+                    frames.append(process_frame(i, frame))  # Обрабатываем только измененные
+
+                else:
+                    frames.append(previous_frames[i])  # Если кадр не изменился, используем старый
+
             # Объединяем кадры
             merged_frame = merge_frames(frames)
             out.write(merged_frame)
+
         else:
             for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
-                process_frame(i, frame)
+
+                if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
+                    previous_frames[i] = frame.copy()
+                    process_frame(i, frame)
 
         last_processed_time = time.time()  # Обновляем таймер
         print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
