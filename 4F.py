@@ -81,7 +81,11 @@ def update_status(i, j, detected, active):
     """Обновляет строку статуса с перерисовкой таблицы."""
     # Индекс текущей строки в статусе
     index = i * num_parts + j
-    status_line[index] = (detected, active)
+    if index < len(status_line):  # Проверка на выход за пределы
+        status_line[index] = (detected, active)
+    else:
+        print(f"Ошибка: Индекс {index} выходит за пределы списка!")
+        return
 
     # Очистка экрана и вывод таблицы
     sys.stdout.write("\033c")  # Очистить экран (кросс-платформенно)
@@ -89,7 +93,6 @@ def update_status(i, j, detected, active):
 
     # Пауза, чтобы увидеть изменения (опционально)
     time.sleep(0.1)
-
 
 def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
