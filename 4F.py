@@ -187,12 +187,12 @@ def detect_green(frame):
 #         return self.latest_frame  # Просто возвращаем последний доступный кадр
 class FrameCaptureThread(threading.Thread):
     """Поток для захвата кадров из RTSP-потока."""
-    def __init__(self, rtsp_url, sleep_interval=0.0025):
+    def __init__(self, rtsp_url, sleep_interval=0.0125):
         threading.Thread.__init__(self)
         self.cap = cv2.VideoCapture(rtsp_url)
         self.latest_frame = None  # Храним только последний кадр
         self.running = True
-        self.sleep_interval = sleep_interval  # Интервал для слипа (в секундах)
+        # self.sleep_interval = sleep_interval  # Интервал для слипа (в секундах)
 
     def run(self):
         """Основной цикл потока для захвата кадров."""
