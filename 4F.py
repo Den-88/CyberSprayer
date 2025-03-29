@@ -1,12 +1,215 @@
 import asyncio
+import concurrent
+import threading
+import time
 import cv2
 import numpy as np
-import time
+from pyfirmata2 import Arduino
+import signal
+import sys
 
+# Конфигурация Arduino
+ARDUINO_PORT = "/dev/ttyUSB0"  # Порт Arduino
+LED_PIN = 13                   # Пин для светодиода
+RELAY_PIN_1 = 2                # Пин для реле 1 (левая часть)
+RELAY_PIN_2 = 3                # Пин для реле 2 (правая часть)
+RELAY_PIN_3 = 4                # Пин для реле 1 (левая часть)
+RELAY_PIN_4 = 5                # Пин для реле 2 (правая часть)
+
+# Минимальная площадь объекта для обнаружения (в пикселях)
+MIN_OBJECT_AREA = 800 # 150 было
+
+# Настройки RTSP
 RTSP_URLS = [
     "rtsp://admin:user12345@192.168.1.201:8555/main",  # Камера 1
     "rtsp://admin:user12345@192.168.1.202:8555/main",  # Камера 2
+    "rtsp://admin:user12345@192.168.1.203:8555/main",  # Камера 3
+    "rtsp://admin:user12345@192.168.1.204:8555/main",  # Камера 4
 ]
+
+num_parts = 6  # Количество частей кадра
+spray_active = [[False] * num_parts for _ in range(len(RTSP_URLS))]
+spray_end_time = [[0] * num_parts for _ in range(len(RTSP_URLS))]
+green_detected = [[False] * num_parts for _ in range(len(RTSP_URLS))]
+
+RTSP_OUTPUT_PIPELINE = (
+    "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
+    "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
+)
+
+# Флаг для включения/отключения вывода изображения
+ENABLE_OUTPUT = True  # По умолчанию вывод отключен
+
+# Инициализация Arduino
+board = Arduino(ARDUINO_PORT)
+
+def detect_green(frame):
+    """Обнаружение зеленого цвета на кадре или его части."""
+
+    return False, []
+    if frame is None:
+        return False, []  # Если кадра нет, ничего не делать
+
+
+    # Преобразуем кадр в HSV
+    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    lower_green = np.array([35, 30, 40])  # Нижняя граница зеленого
+    upper_green = np.array([85, 255, 255])  # Верхняя граница зеленого
+
+    # Создаем маску для зеленого цвета
+    mask = cv2.inRange(hsv, lower_green, upper_green)
+
+    # Находим контуры зеленых объектов
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Фильтруем контуры по минимальной площади
+    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_OBJECT_AREA]
+
+    # Возвращаем результат и отфильтрованные контуры
+    return len(filtered_contours) > 0, filtered_contours
+
+class FrameCaptureThread(threading.Thread):
+    """Поток для захвата кадров из RTSP-потока."""
+    def __init__(self, rtsp_url):
+        threading.Thread.__init__(self)
+        self.cap = cv2.VideoCapture(rtsp_url)
+        self.latest_frame = None  # Храним только последний кадр
+        self.running = True
+        # self.lock = threading.Lock()  # Блокировка для потокобезопасности
+
+    async def run(self):
+        """Основной цикл потока для захвата кадров."""
+        while self.running:
+            ret, frame = self.cap.read()
+            if ret:
+                # with self.lock:
+                self.latest_frame = frame  # Сохраняем только последний кадр
+        # self.cap.release()
+        await asyncio.sleep(0.05)  # Задержка, чтобы не перегружать процессор
+
+    def stop(self):
+        """Остановка потока."""
+        self.running = False
+        self.join()
+
+    def get_frame(self):
+        """Получение последнего доступного кадра (не блокирующее)."""
+        # with self.lock:
+        return self.latest_frame  # Просто возвращаем последний доступный кадр
+
+def signal_handler(sig, frame):
+    """Обработчик сигнала для корректного завершения программы."""
+    print("Программа завершена.")
+    global running
+    running = False
+
+    if capture_threads:
+        for thread in capture_threads:
+            thread.stop()  # Останавливаем потоки
+    if ENABLE_OUTPUT and out:
+        out.release()  # Закрываем видео-поток
+
+    cv2.destroyAllWindows()  # Закрываем окна OpenCV
+    sys.exit(0)  # Выход из программы
+
+def resize_frame(frame, width, height):
+    """Изменение размера кадра до заданных ширины и высоты."""
+    return cv2.resize(frame, (width, height))
+
+def merge_frames(frames):
+    """Объединение кадров в один (горизонтально)."""
+    height, width = frames[0].shape[:2]
+
+    # Уменьшаем разрешение каждого кадра в 4 раза
+    resized_frames = [resize_frame(frame, width // 4, height // 4) for frame in frames]
+
+    # Объединяем все кадры по горизонтали
+    merged_frame = np.hstack(resized_frames)  # Для горизонтальной стыковки
+
+    return merged_frame
+
+def process_frames(frames):
+    global num_parts, spray_active, spray_end_time, green_detected  # Указываем, что это глобальная переменная
+
+    for i, frame in enumerate(frames):
+        if frame is None:
+            continue
+
+        height, width = frame.shape[:2]
+        part_width = width // num_parts
+        current_time = time.time()
+
+        for j in range(num_parts):
+            x_start = j * part_width
+            x_end = (j + 1) * part_width if j < num_parts - 1 else width
+            part_frame = frame[:, x_start:x_end]
+
+            # Анализируем часть кадра
+            green_detected[i][j], contours = detect_green(part_frame)
+
+            # Логика работы форсунки для каждой части
+            if green_detected[i][j]:
+                spray_active[i][j] = True
+                spray_end_time[i][j] = current_time + 0.3
+            elif current_time > spray_end_time[i][j]:
+                spray_active[i][j] = False
+
+            # Логирование
+            print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
+            # Управление Arduino
+            board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
+            board.digital[RELAY_PIN_1].write(not spray_active[0][0])  # Реле 1 (левая часть)
+            board.digital[RELAY_PIN_2].write(not spray_active[0][1])  # Реле 2 (правая часть)
+            board.digital[RELAY_PIN_3].write(not spray_active[0][2])  # Реле 2 (правая часть)
+            board.digital[RELAY_PIN_4].write(not spray_active[0][3])  # Реле 2 (правая часть)
+
+            if ENABLE_OUTPUT:
+                # Отрисовка контуров
+                for contour in contours:
+                    x, y, w, h = cv2.boundingRect(contour)
+                    cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    area = cv2.contourArea(contour)
+                    cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+                # Рисуем 7 вертикальных белых линий для разделения на 6 частей
+                height, width = frame.shape[:2]
+                # Количество частей
+                num_parts = 6
+                # Расстояние между линиями
+                line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
+                # Добавляем линии с самого левого и правого края
+                line_positions = [0] + line_positions + [width]
+
+                # Рисуем линии
+                for pos in line_positions:
+                    cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
+
+                # Добавляем нумерацию сверху
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                font_scale = 3.5
+                font_thickness = 6
+                text_color = (0, 0, 255)  # Белый цвет текста
+                offset = 100  # Отступ сверху
+
+                for j in range(num_parts):
+                    # Позиция для текста (центр каждой части)
+                    x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
+                    # Текст (номер)
+                    cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
+                                font_thickness)
+
+                    # Координаты кружков
+                    circle1_center = (int(j * width / num_parts) + 50 , 50)  # Первый кружок
+                    circle2_center = (int(j * width / num_parts) + 50, 100)  # Второй кружок
+                    radius = 20  # Радиус кружков
+
+                    # Цвета кружков
+                    circle1_color = (0, 255, 0) if green_detected[i][j] else (0, 0, 255)  # Зеленый/красный
+                    circle2_color = (255, 0, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
+
+                    # Рисуем кружки
+                    cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
+                    cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
 
 
 async def capture_frame(rtsp_url):
@@ -20,38 +223,81 @@ async def capture_frame(rtsp_url):
         yield frame
         await asyncio.sleep(0.05)  # Небольшая задержка для уменьшения нагрузки на процессор
 
-
-async def process_frame(frame):
-    """Обработка кадра (обнаружение зеленого цвета)."""
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 30, 40])
-    upper_green = np.array([85, 255, 255])
-    mask = cv2.inRange(hsv, lower_green, upper_green)
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    for contour in contours:
-        if cv2.contourArea(contour) > 800:
-            print("Обнаружен зеленый объект!")
-            x, y, w, h = cv2.boundingRect(contour)
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-    return frame
-
-
 async def main():
     print("Запуск программы...")
+    """Основная функция программы."""
+    global running, capture_threads, out
+
     tasks = [capture_frame(rtsp_url) for rtsp_url in RTSP_URLS]
     frames = [asyncio.create_task(task.__anext__()) for task in tasks]
+
+    # capture_threads = [FrameCaptureThread(rtsp) for rtsp in RTSP_URLS]
+    #
+    # # Запускаем захват кадров в асинхронных задачах
+    # tasks = [asyncio.create_task(thread.run()) for thread in capture_threads]
+    # await asyncio.gather(*tasks)
+    #
+    # # for thread in capture_threads:
+    # #     thread.start()
+    #
+    # # Даем время потокам запуститься
+    # time.sleep(2)
+    #
+    # for thread in capture_threads:
+    #     if not thread.cap.isOpened():
+    #         print("Ошибка: невозможно открыть RTSP-поток. Завершаем программу.")
+    #         thread.stop()
+    #         sys.exit(1)
+    #
+    # Инициализация RTSP-вывода, если вывод включен
+    if ENABLE_OUTPUT:
+        out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (10240 // 4, 1440 // 4), True)
+    #
+    # # Основной цикл обработки кадров
+    # print(f"+++")
+
     while True:
         done, pending = await asyncio.wait(frames, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
             frame = task.result()
-            frame = await process_frame(frame)
-            cv2.imshow("Processed Frame", frame)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+            frame = await process_frames([frame])
+            print("Processed Frame", frame)
         for task in pending:
             task.cancel()
         frames = [asyncio.create_task(task.__anext__()) for task in tasks]
 
 
+    # running = True
+    # while running:
+    #     current_time = time.time()
+    #     if ENABLE_OUTPUT and out:
+    #         frames = []
+    #         for thread in capture_threads:
+    #             print(f"Frame process")
+    #             frame = thread.get_frame()
+    #             process_frames([frame])
+    #             frames.append(frame)
+    #         # Объединяем кадры
+    #         merged_frame = merge_frames(frames)
+    #         out.write(merged_frame)
+    #     else:
+    #         for thread in capture_threads:
+    #             print(f"Frame process")
+    #             frame = thread.get_frame()
+    #             process_frames([frame])
+    #
+    #     last_processed_time = time.time()  # Обновляем таймер
+    #     print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
+
+    # Завершение работы
+    for thread in capture_threads:
+        thread.stop()
+    if ENABLE_OUTPUT:
+        out.release()
+    cv2.destroyAllWindows()
+
+
 if __name__ == "__main__":
+    # Обработчик сигнала SIGINT для корректного завершения программы
+    signal.signal(signal.SIGINT, signal_handler)
     asyncio.run(main())
