@@ -48,6 +48,18 @@ ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
 
+# Буфер строки состояния
+status_line = [""] * (len(RTSP_URLS) * num_parts)
+
+def update_status(i, j, detected, active):
+    """Обновляет строку состояния для камеры и части."""
+    index = i * num_parts + j  # Определяем индекс в массиве
+    status_line[index] = f"Cam {i+1} Part {j+1}: Green={detected} Spray={active}"
+
+    # Выводим всё одной строкой, заменяя предыдущий вывод
+    sys.stdout.write("\r" + " | ".join(status_line))
+    sys.stdout.flush()  # Принудительно обновляем вывод
+
 def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
 
@@ -274,7 +286,9 @@ def process_frame(i, frame):
             spray_active[i][j] = False
 
         # Логирование
-        print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
+        # print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
+        update_status(i, j, green_detected[i][j], spray_active[i][j])
+
         # Управление Arduino
         board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
         board.digital[RELAY_PIN_1].write(not spray_active[0][0])  # Реле 1 (левая часть)
