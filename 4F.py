@@ -73,6 +73,7 @@ class FrameCaptureThread(threading.Thread):
         threading.Thread.__init__(self)
         self.cap = cv2.VideoCapture(rtsp_url)
         self.latest_frame = None  # Храним только последний кадр
+        self.ready_for_processing = threading.Event()  # Сигнал для обработки
         self.running = True
         self.lock = threading.Lock()  # Блокировка для потокобезопасности
 
@@ -83,6 +84,10 @@ class FrameCaptureThread(threading.Thread):
             if ret:
                 with self.lock:
                     self.latest_frame = frame  # Сохраняем только последний кадр
+                self.ready_for_processing.set()  # Сигнализируем, что кадр готов
+            else:
+                time.sleep(0.01)  # Небольшая задержка, если кадр не получен
+
         self.cap.release()
 
     def stop(self):
@@ -93,7 +98,12 @@ class FrameCaptureThread(threading.Thread):
     def get_frame(self):
         """Получение последнего доступного кадра (не блокирующее)."""
         with self.lock:
-            return self.latest_frame  # Просто возвращаем последний доступный кадр
+            return self.latest_frame
+
+    def wait_for_frame(self):
+        """Ожидание, пока кадр не будет готов для обработки."""
+        self.ready_for_processing.wait()
+        self.ready_for_processing.clear()  # Сбрасываем сигнал
 
 
 def signal_handler(sig, frame):
@@ -379,7 +389,6 @@ def main():
     for thread in capture_threads:
         thread.start()
 
-
     # Даем время потокам запуститься
     time.sleep(2)
 
@@ -397,10 +406,16 @@ def main():
     running = True
     while running:
         current_time = time.time()
+
+        # Ожидаем, пока кадры будут готовы для обработки
+        for thread in capture_threads:
+            thread.wait_for_frame()
+
         frames = [thread.get_frame() for thread in capture_threads]
         frames = [f for f in frames if f is not None]  # Фильтруем пустые кадры
         if frames:
             process_frames(frames)  # Функция обработки
+
         last_processed_time = time.time()  # Обновляем таймер
         print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
@@ -410,6 +425,7 @@ def main():
     if ENABLE_OUTPUT:
         out.release()
     cv2.destroyAllWindows()
+
 
 
 if __name__ == "__main__":
