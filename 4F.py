@@ -257,14 +257,17 @@ async def main():
     # print(f"+++")
 
     while True:
+        current_time = time.time()
         done, pending = await asyncio.wait(frames, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
             frame = task.result()
-            frame = process_frames([frame])
+            frame = process_frames(frame)
             print("Processed Frame", frame)
         for task in pending:
             task.cancel()
         frames = [asyncio.create_task(task.__anext__()) for task in tasks]
+        last_processed_time = time.time()  # Обновляем таймер
+        print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
 
     # running = True
