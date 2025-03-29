@@ -62,7 +62,7 @@ RED = '\033[31m'    # Красный
 RESET = '\033[0m'   # Сброс цвета
 
 # Инициализация статусов
-status_line = [(False, False, 0) for _ in range(len(RTSP_URLS) * num_parts)]
+status_line = [(False, False, 0.0) for _ in range(len(RTSP_URLS) * num_parts)]
 
 # Кэш позиций курсора для каждой строки
 line_positions = {}
