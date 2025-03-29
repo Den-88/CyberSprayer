@@ -60,9 +60,9 @@ def update_status(i, j, detected, active):
     status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={detected} Spray={active}"
 
     # Собираем строку
-    output = " | ".join(status_line)
+    output = " | ".join(filter(None, status_line))  # Убираем пустые строки
 
-    # Очищаем старый вывод
+    # Очищаем старый вывод, заполняя пробелами
     sys.stdout.write("\r" + " " * last_length + "\r")
 
     # Выводим новую строку
