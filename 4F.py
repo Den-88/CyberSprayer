@@ -55,11 +55,21 @@ def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
     os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
 
+
 def update_status(i, j, detected, active):
     """Обновляет строку состояния с полной перерисовкой экрана."""
     # Индекс текущей строки в статусе
     index = i * num_parts + j
-    status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={detected} Spray={active}"
+
+    # Проверяем значение active и присваиваем корректное значение
+    spray_status = "True" if active else "False"
+    green_status = "True" if detected else "False"
+
+    # Отладочная информация
+    print(f"Updating Cam {i + 1} Part {j + 1}: Green={green_status} Spray={spray_status}")
+
+    # Обновление строки состояния с правильными значениями
+    status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={green_status} Spray={spray_status}"
 
     # Собираем строку с каждой записью в новой строке
     output = "\n".join(status_line)
@@ -68,7 +78,6 @@ def update_status(i, j, detected, active):
     sys.stdout.write("\033[F" * len(status_line))  # Перемещение курсора на количество строк
     sys.stdout.write(output + "\n")  # Вывод обновленного текста
     sys.stdout.flush()
-
 
 
 def detect_green(frame):
