@@ -37,7 +37,7 @@ RTSP_OUTPUT_PIPELINE = (
 )
 
 # Флаг для включения/отключения вывода изображения
-ENABLE_OUTPUT = False  # По умолчанию вывод отключен
+ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
