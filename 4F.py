@@ -62,12 +62,8 @@ def update_status(i, j, detected, active):
     # Собираем строку
     output = " | ".join(status_line)
 
-    # Очистка предыдущего вывода
-    sys.stdout.write("\r" + " " * last_length)  # Очистить строку
-    sys.stdout.write("\r")  # Вернуться в начало строки
-
-    # Выводим новую строку
-    sys.stdout.write(output)
+    # Очистить строку, используя '\r' для возврата курсора в начало
+    sys.stdout.write("\r" + output)
     sys.stdout.flush()
 
     # Запоминаем длину текущего вывода
