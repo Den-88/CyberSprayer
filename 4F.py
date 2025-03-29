@@ -62,7 +62,7 @@ RESET = '\033[0m'   # Сброс цвета
 
 # Функция для обновления статуса
 def update_status(i, j, detected, active):
-    """Обновляет строку статуса с перерисовкой таблицы."""
+    """Обновляет строку статуса без перерисовки всей таблицы."""
     index = i * num_parts + j
     if index < len(status_line):  # Проверка на выход за пределы
         status_line[index] = (detected, active)
@@ -70,17 +70,8 @@ def update_status(i, j, detected, active):
         print(f"Ошибка: Индекс {index} выходит за пределы списка!")
         return
 
-    # Очистка экрана и вывод таблицы
-    sys.stdout.write("\033c")  # Очистить экран (кросс-платформенно)
-    display_status(status_line)
-
-# Функция для отображения статуса
-def display_status(status_line):
-    """Выводит состояние в виде таблицы."""
-    headers = "Форсунка    | Камера             | Зелёный обнаружен? | Форсунка включена? "
-    print(headers)
-    print("-" * len(headers))  # Разделитель
-
+    # Обновляем только нужную часть таблицы для зеленого и форсунки
+    sys.stdout.write("\033[F" * len(RTSP_URLS))  # Перемещаем каретку вверх (чтобы переписать)
     for i in range(len(RTSP_URLS)):
         for j in range(num_parts):
             index = i * num_parts + j
@@ -91,9 +82,38 @@ def display_status(status_line):
             green_color = GREEN if status_line[index][0] else RED
             spray_color = GREEN if status_line[index][1] else RED
 
+            # Формируем строку с обновленным статусом
             nozzle_number = (i * num_parts) + (j + 1)
             nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
 
+            # Перерисовываем только измененную строку
+            sys.stdout.write(
+                f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}\n")
+            sys.stdout.flush()
+
+# Функция для отображения статуса
+def display_status(status_line):
+    """Выводит состояние в виде таблицы."""
+    headers = "Форсунка    | Камера             | Зелёный обнаружен? | Форсунка включена? "
+    print(headers)
+    print("-" * len(headers))  # Разделитель
+
+    # Выводим все строки статуса
+    for i in range(len(RTSP_URLS)):
+        for j in range(num_parts):
+            index = i * num_parts + j
+            green_status = "ДА " if status_line[index][0] else "НЕТ"
+            spray_status = "ВКЛ " if status_line[index][1] else "ВЫКЛ"
+
+            # Применяем цвета
+            green_color = GREEN if status_line[index][0] else RED
+            spray_color = GREEN if status_line[index][1] else RED
+
+            # Формируем строку с статусом
+            nozzle_number = (i * num_parts) + (j + 1)
+            nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
+
+            # Выводим строку
             print(
                 f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}")
 
