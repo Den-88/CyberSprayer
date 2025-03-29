@@ -68,22 +68,24 @@ line_positions = {}
 
 
 def init_display():
-    """Инициализация дисплея с таблицей и запоминанием позиций."""
+    """Инициализация дисплея с таблицей и запоминанием позиций строк."""
     sys.stdout.write("\033[?25l")  # Скрыть курсор
     headers = "Форсунка    | Камера             | Зелёный обнаружен? | Форсунка включена? "
     print(headers)
     print("-" * len(headers))
 
+    # Начальная позиция после заголовков (3 строка)
+    current_line = 3
+
     for i in range(len(RTSP_URLS)):
         for j in range(num_parts):
             index = i * num_parts + j
+            line_positions[index] = current_line
+            current_line += 1
+
             nozzle_number = (i * num_parts) + (j + 1)
             nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
 
-            # Запоминаем позицию каждой строки
-            line_positions[index] = sys.stdout.tell()
-
-            # Выводим начальное состояние
             print(
                 f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {'НЕТ': <6}             | {'ВЫКЛ': <6}")
 
@@ -103,9 +105,9 @@ def update_status(i, j, detected, active):
 
     status_line[index] = (detected, active)
 
-    # Получаем сохраненную позицию курсора
-    pos = line_positions.get(index)
-    if pos is None:
+    # Получаем номер строки для этого элемента
+    line_num = line_positions.get(index)
+    if line_num is None:
         return
 
     # Подготавливаем новые значения
@@ -114,13 +116,19 @@ def update_status(i, j, detected, active):
     spray_status = "ВКЛ " if active else "ВЫКЛ"
     spray_color = GREEN if active else RED
 
-    # Перемещаем курсор и обновляем строку
-    sys.stdout.seek(pos)
+    # Формируем строку для обновления
     nozzle_number = (i * num_parts) + (j + 1)
     nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
+    new_line = (
+        f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | "
+        f"{green_color}{green_status: <6}{RESET}             | "
+        f"{spray_color}{spray_status: <6}{RESET}"
+    )
 
-    sys.stdout.write(
-        f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}")
+    # Перемещаем курсор и обновляем строку
+    sys.stdout.write(f"\033[{line_num}H")  # Перемещение к нужной строке
+    sys.stdout.write(new_line)
+    sys.stdout.write("\033[0K")  # Очистка до конца строки
     sys.stdout.flush()
 
 
