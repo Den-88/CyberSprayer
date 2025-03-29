@@ -248,6 +248,10 @@ def process_frame(i, frame):
     part_width = width // num_parts
     current_time = time.time()
 
+    if ENABLE_OUTPUT:
+        # Создаем копию кадра для рисования
+        frame_copy = frame.copy()
+
     for j in range(num_parts):
         x_start = j * part_width
         x_end = (j + 1) * part_width if j < num_parts - 1 else width
@@ -281,9 +285,7 @@ def process_frame(i, frame):
                 cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
             # Рисуем 7 вертикальных белых линий для разделения на 6 частей
-            height, width = frame.shape[:2]
-            # Количество частей
-            num_parts = 6
+            height, width = frame_copy.shape[:2]
             # Расстояние между линиями
             line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
             # Добавляем линии с самого левого и правого края
@@ -291,7 +293,7 @@ def process_frame(i, frame):
 
             # Рисуем линии
             for pos in line_positions:
-                cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
+                cv2.line(frame_copy, (pos, 0), (pos, height), (255, 255, 255), 2)
 
             # Добавляем нумерацию сверху
             font = cv2.FONT_HERSHEY_SIMPLEX
@@ -304,7 +306,7 @@ def process_frame(i, frame):
                 # Позиция для текста (центр каждой части)
                 x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
                 # Текст (номер)
-                cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
+                cv2.putText(frame_copy, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
                             font_thickness)
 
                 # Координаты кружков
@@ -317,8 +319,10 @@ def process_frame(i, frame):
                 circle2_color = (255, 0, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
 
                 # Рисуем кружки
-                cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
-                cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
+                cv2.circle(frame_copy, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
+                cv2.circle(frame_copy, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
+
+    return frame_copy
 
 def main():
     """Основная функция программы."""
@@ -349,8 +353,8 @@ def main():
             frames = []
             for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
-                process_frame(i, frame)
-                frames.append(frame)
+                # process_frame(i, frame)
+                frames.append(process_frame(i, frame))
             # Объединяем кадры
             merged_frame = merge_frames(frames)
             out.write(merged_frame)
