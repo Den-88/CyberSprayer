@@ -53,76 +53,75 @@ def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
     os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
 
-status_line = [(False, False)] * (4 * num_parts)
+# status_line = [(False, False)] * (len(RTSP_URLS) * num_parts)
 # Цвета для вывода
 GREEN = '\033[32m'  # Зеленый
 RED = '\033[31m'    # Красный
 RESET = '\033[0m'   # Сброс цвета
 
+# Инициализация статусов
+status_line = [(False, False) for _ in range(len(RTSP_URLS) * num_parts)]
 
-# Функция для обновления статуса
-def update_status(i, j, detected, active):
-    """Обновляет строку статуса, перерисовывая только измененные части."""
-    index = i * num_parts + j
-    if index < len(status_line):  # Проверка на выход за пределы
-        current_status = status_line[index]
-
-        # Если произошли изменения, обновляем
-        if current_status != (detected, active):
-            status_line[index] = (detected, active)
-            # Обновляем только одну строку
-            update_single_line(i, j, detected, active)
-    else:
-        print(f"Ошибка: Индекс {index} выходит за пределы списка!")
-        return
+# Кэш позиций курсора для каждой строки
+line_positions = {}
 
 
-# Функция для обновления только одной строки
-def update_single_line(i, j, detected, active):
-    """Обновляет только одну строку в таблице."""
-    green_status = "ДА " if detected else "НЕТ"
-    spray_status = "ВКЛ " if active else "ВЫКЛ"
-
-    # Применяем цвета
-    green_color = GREEN if detected else RED
-    spray_color = GREEN if active else RED
-
-    nozzle_number = (i * num_parts) + (j + 1)
-    nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
-
-    # Переход в начало строки
-    sys.stdout.write("\033[F")
-    # Обновляем строку
-    sys.stdout.write(
-        f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}\n")
-    sys.stdout.flush()
-
-
-# Функция для отображения статуса
-def display_status(status_line):
-    """Выводит состояние в виде таблицы."""
+def init_display():
+    """Инициализация дисплея с таблицей и запоминанием позиций."""
+    sys.stdout.write("\033[?25l")  # Скрыть курсор
     headers = "Форсунка    | Камера             | Зелёный обнаружен? | Форсунка включена? "
     print(headers)
-    print("-" * len(headers))  # Разделитель
+    print("-" * len(headers))
 
-    # Выводим все строки статуса
     for i in range(len(RTSP_URLS)):
         for j in range(num_parts):
             index = i * num_parts + j
-            green_status = "ДА " if status_line[index][0] else "НЕТ"
-            spray_status = "ВКЛ " if status_line[index][1] else "ВЫКЛ"
-
-            # Применяем цвета
-            green_color = GREEN if status_line[index][0] else RED
-            spray_color = GREEN if status_line[index][1] else RED
-
-            # Формируем строку с статусом
             nozzle_number = (i * num_parts) + (j + 1)
             nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
 
-            # Выводим строку
+            # Запоминаем позицию каждой строки
+            line_positions[index] = sys.stdout.tell()
+
+            # Выводим начальное состояние
             print(
-                f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}")
+                f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {'НЕТ': <6}             | {'ВЫКЛ': <6}")
+
+    sys.stdout.flush()
+
+
+def update_status(i, j, detected, active):
+    """Обновляет только нужные статусы без перерисовки всей таблицы."""
+    index = i * num_parts + j
+    if index >= len(status_line):
+        return
+
+    # Проверяем, изменились ли значения
+    old_detected, old_active = status_line[index]
+    if detected == old_detected and active == old_active:
+        return
+
+    status_line[index] = (detected, active)
+
+    # Получаем сохраненную позицию курсора
+    pos = line_positions.get(index)
+    if pos is None:
+        return
+
+    # Подготавливаем новые значения
+    green_status = "ДА " if detected else "НЕТ"
+    green_color = GREEN if detected else RED
+    spray_status = "ВКЛ " if active else "ВЫКЛ"
+    spray_color = GREEN if active else RED
+
+    # Перемещаем курсор и обновляем строку
+    sys.stdout.seek(pos)
+    nozzle_number = (i * num_parts) + (j + 1)
+    nozzle_number_str = f"{nozzle_number} " if nozzle_number < 10 else str(nozzle_number)
+
+    sys.stdout.write(
+        f"Форсунка {nozzle_number_str} | Камера {i + 1: <2} Часть {j + 1: <2} | {green_color}{green_status: <6}{RESET}             | {spray_color}{spray_status: <6}{RESET}")
+    sys.stdout.flush()
+
 
 def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
