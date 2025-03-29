@@ -209,10 +209,10 @@ def process_frames(frames):
                     cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
                     cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
 
-    if ENABLE_OUTPUT and out:
-        # Объединяем кадры
-        merged_frame = merge_frames(frames)
-        out.write(merged_frame)
+    # if ENABLE_OUTPUT and out:
+    #     # Объединяем кадры
+    #     merged_frame = merge_frames(frames)
+    #     out.write(merged_frame)
 
 def main():
     """Основная функция программы."""
@@ -239,17 +239,21 @@ def main():
     running = True
     while running:
         current_time = time.time()
-        for thread in capture_threads:
-            process_frames([thread.get_frame()])
-            # print(str(thread.get_frame()))
-            # process_frame([thread.get_frame()])
+        if ENABLE_OUTPUT and out:
+            frames = []
+            for thread in capture_threads:
+                frame = thread.get_frame()
+                process_frames([frame])
+                frames.append(frame)
+            # Объединяем кадры
+            merged_frame = merge_frames(frames)
+            out.write(merged_frame)
+        else:
+            for thread in capture_threads:
+                frame = thread.get_frame()
+                process_frames([frame])
 
-        # frames = [thread.get_frame() for thread in capture_threads]
-        # frames = [f for f in frames if f is not None]  # Фильтруем пустые кадры
-        # if frames:
-        #     process_frames(frames)  # Функция обработки
         last_processed_time = time.time()  # Обновляем таймер
-
         print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
     # Завершение работы
