@@ -51,7 +51,6 @@ board = Arduino(ARDUINO_PORT)
 status_line = [""] * (len(RTSP_URLS) * num_parts)
 last_length = 0  # Длина предыдущего вывода
 
-
 def update_status(i, j, detected, active):
     """Обновляет строку состояния без размазывания текста."""
     global last_length
@@ -60,7 +59,7 @@ def update_status(i, j, detected, active):
     status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={detected} Spray={active}"
 
     # Собираем строку
-    output = " | ".join(filter(None, status_line))  # Убираем пустые строки
+    output = " | ".join(status_line)
 
     # Очищаем старый вывод, заполняя пробелами
     sys.stdout.write("\r" + " " * last_length + "\r")
@@ -71,6 +70,9 @@ def update_status(i, j, detected, active):
 
     # Запоминаем длину строки
     last_length = len(output)
+
+    # Лог для отладки (если нужно)
+    print(f"Updating: {output}")
 
 
 def detect_green(frame):
