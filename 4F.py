@@ -62,7 +62,7 @@ RED = '\033[31m'    # Красный
 RESET = '\033[0m'   # Сброс цвета
 
 # Инициализация статусов
-status_line = [(False, False, 0.0) for _ in range(len(RTSP_URLS) * num_parts)]
+status_line = [(False, False, 0) for _ in range(len(RTSP_URLS) * num_parts)]
 
 # Кэш позиций курсора для каждой строки
 line_positions = {}
@@ -103,7 +103,7 @@ def update_status(i, j, detected, active, time):
     if detected == old_detected and active == old_active and old_time == time:
         return
 
-    status_line[index] = (detected, active)
+    status_line[index] = (detected, active, time)
 
     # Получаем номер строки для этого элемента
     line_num = line_positions.get(index)
