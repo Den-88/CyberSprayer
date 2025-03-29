@@ -61,8 +61,8 @@ def update_status(i, j, detected, active):
     index = i * num_parts + j
     status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={detected} Spray={active}"
 
-    # Собираем строку
-    output = " | ".join(status_line)
+    # Собираем строку с каждой записью в новой строке
+    output = "\n".join(status_line)
 
     # Очистка экрана и вывод новой строки
     clear_screen()
