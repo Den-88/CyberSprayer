@@ -48,17 +48,30 @@ ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
 
-# Буфер строки состояния
 status_line = [""] * (len(RTSP_URLS) * num_parts)
+last_length = 0  # Длина предыдущего вывода
+
 
 def update_status(i, j, detected, active):
-    """Обновляет строку состояния для камеры и части."""
-    index = i * num_parts + j  # Определяем индекс в массиве
-    status_line[index] = f"Cam {i+1} Part {j+1}: Green={detected} Spray={active}"
+    """Обновляет строку состояния без размазывания текста."""
+    global last_length
 
-    # Выводим всё одной строкой, заменяя предыдущий вывод
-    sys.stdout.write("\r" + " | ".join(status_line))
-    sys.stdout.flush()  # Принудительно обновляем вывод
+    index = i * num_parts + j
+    status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={detected} Spray={active}"
+
+    # Собираем строку
+    output = " | ".join(status_line)
+
+    # Очищаем старый вывод
+    sys.stdout.write("\r" + " " * last_length + "\r")
+
+    # Выводим новую строку
+    sys.stdout.write(output)
+    sys.stdout.flush()
+
+    # Запоминаем длину строки
+    last_length = len(output)
+
 
 def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
