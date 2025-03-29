@@ -74,15 +74,15 @@ class FrameCaptureThread(threading.Thread):
         self.cap = cv2.VideoCapture(rtsp_url)
         self.latest_frame = None  # Храним только последний кадр
         self.running = True
-        self.lock = threading.Lock()  # Блокировка для потокобезопасности
+        # self.lock = threading.Lock()  # Блокировка для потокобезопасности
 
     def run(self):
         """Основной цикл потока для захвата кадров."""
         while self.running:
             ret, frame = self.cap.read()
             if ret:
-                with self.lock:
-                    self.latest_frame = frame  # Сохраняем только последний кадр
+                # with self.lock:
+                self.latest_frame = frame  # Сохраняем только последний кадр
         self.cap.release()
 
     def stop(self):
@@ -92,8 +92,8 @@ class FrameCaptureThread(threading.Thread):
 
     def get_frame(self):
         """Получение последнего доступного кадра (не блокирующее)."""
-        with self.lock:
-            return self.latest_frame  # Просто возвращаем последний доступный кадр
+        # with self.lock:
+        return self.latest_frame  # Просто возвращаем последний доступный кадр
 
 def signal_handler(sig, frame):
     """Обработчик сигнала для корректного завершения программы."""
@@ -208,11 +208,6 @@ def process_frames(frames):
                     # Рисуем кружки
                     cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
                     cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
-
-    # if ENABLE_OUTPUT and out:
-    #     # Объединяем кадры
-    #     merged_frame = merge_frames(frames)
-    #     out.write(merged_frame)
 
 def main():
     """Основная функция программы."""
