@@ -211,13 +211,18 @@ def process_frames(frames):
                     cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
                     cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
 
-def main():
+async def main():
     """Основная функция программы."""
     global running, capture_threads, out
 
     capture_threads = [FrameCaptureThread(rtsp) for rtsp in RTSP_URLS]
-    for thread in capture_threads:
-        thread.start()
+
+    # Запускаем захват кадров в асинхронных задачах
+    tasks = [thread.run() for thread in capture_threads]
+    await asyncio.gather(*tasks)
+
+    # for thread in capture_threads:
+    #     thread.start()
 
     # Даем время потокам запуститься
     time.sleep(2)
