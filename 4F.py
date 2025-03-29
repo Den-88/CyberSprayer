@@ -65,17 +65,14 @@ def update_status(i, j, detected, active):
     spray_status = "True" if active else "False"
     green_status = "True" if detected else "False"
 
-    # Отладочная информация
-    print(f"Updating Cam {i + 1} Part {j + 1}: Green={green_status} Spray={spray_status}")
-
-    # Обновление строки состояния с правильными значениями
+    # Обновление строки состояния
     status_line[index] = f"Cam {i + 1} Part {j + 1}: Green={green_status} Spray={spray_status}"
 
-    # Собираем строку с каждой записью в новой строке
-    output = "\n".join(status_line)
+    # Очищаем экран (перемещаем курсор в начало)
+    sys.stdout.write("\033[H")  # Перемещение курсора в верхний левый угол
 
-    # Обновляем вывод без ошибок
-    sys.stdout.write("\r" + output)  # Возврат каретки и вывод обновленного текста
+    # Выводим все строки статуса
+    sys.stdout.write("\n".join(status_line))
     sys.stdout.flush()
 
 
