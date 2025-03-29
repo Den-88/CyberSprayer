@@ -244,6 +244,7 @@ async def main():
         if ENABLE_OUTPUT and out:
             frames = []
             for thread in capture_threads:
+                print(f"Frame process")
                 frame = thread.get_frame()
                 process_frames([frame])
                 frames.append(frame)
