@@ -269,4 +269,4 @@ async def main():
 if __name__ == "__main__":
     # Обработчик сигнала SIGINT для корректного завершения программы
     signal.signal(signal.SIGINT, signal_handler)
-    main()
+    asyncio.run(main())
