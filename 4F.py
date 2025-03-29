@@ -54,27 +54,15 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
 
 status_line = [(False, False)] * (4 * num_parts)
-def display_status(status_line):
-    """Выводит состояние в виде таблицы."""
-    # Заголовки таблицы
-    headers = "Cam/Part   |  Green  |  Spray  "
-    print(headers)
-    print("-" * len(headers))  # Разделитель
+# Цвета для вывода
+GREEN = '\033[32m'  # Зеленый
+RED = '\033[31m'    # Красный
+RESET = '\033[0m'   # Сброс цвета
 
-    # Вывод строк статуса
-    for i in range(4):
-        for j in range(num_parts):
-            # Индекс строки
-            index = i * num_parts + j
-            green_status = "True" if status_line[index][0] else "False"
-            spray_status = "True" if status_line[index][1] else "False"
 
-            # Форматированный вывод каждой строки с выравниванием по центру
-            print(f"Cam {i + 1: <2} Part {j + 1: <2} | {green_status: <6} | {spray_status: <6}")
-
+# Функция для обновления статуса
 def update_status(i, j, detected, active):
     """Обновляет строку статуса с перерисовкой таблицы."""
-    # Индекс текущей строки в статусе
     index = i * num_parts + j
     if index < len(status_line):  # Проверка на выход за пределы
         status_line[index] = (detected, active)
@@ -86,8 +74,29 @@ def update_status(i, j, detected, active):
     sys.stdout.write("\033c")  # Очистить экран (кросс-платформенно)
     display_status(status_line)
 
-    # Пауза, чтобы увидеть изменения (опционально)
-    time.sleep(0.1)
+    time.sleep(0.1)  # Пауза, чтобы увидеть изменения
+
+
+# Функция для отображения статуса
+def display_status(status_line):
+    """Выводит состояние в виде таблицы."""
+    headers = "Cam/Part   |  Green  |  Spray  "
+    print(headers)
+    print("-" * len(headers))  # Разделитель
+
+    for i in range(4):
+        for j in range(num_parts):
+            index = i * num_parts + j
+            green_status = "True" if status_line[index][0] else "False"
+            spray_status = "True" if status_line[index][1] else "False"
+
+            # Применяем цвета
+            green_color = GREEN if status_line[index][0] else RED
+            spray_color = GREEN if status_line[index][1] else RED
+
+            print(
+                f"Cam {i + 1: <2} Part {j + 1: <2} | {green_color}{green_status: <6}{RESET} | {spray_color}{spray_status: <6}{RESET}")
+
 
 def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
