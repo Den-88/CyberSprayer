@@ -38,6 +38,9 @@ board = Arduino(ARDUINO_PORT)
 
 def detect_green(frame, region=None):
     """Обнаружение зеленого цвета на кадре или его части."""
+
+    return False, []
+
     if frame is None:
         return False, []  # Если кадра нет, ничего не делать
 
