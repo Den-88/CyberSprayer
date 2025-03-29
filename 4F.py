@@ -258,17 +258,29 @@ async def main():
 
     while True:
         current_time = time.time()
+
+        # Получаем кадры из RTSP-потоков
         done, pending = await asyncio.wait(frames, return_when=asyncio.FIRST_COMPLETED)
 
+        frames_list = []  # Список для кадров
         for task in done:
             frame = task.result()
-            process_frames([frame])
+            if frame is not None:
+                process_frames([frame])  # Обрабатываем кадр
+                frames_list.append(frame)  # Добавляем в список
 
+        # Перезапускаем ожидание новых кадров
         for task in pending:
             task.cancel()
-
-        # Refresh the frame tasks for the next loop
         frames = [asyncio.create_task(task.__anext__()) for task in tasks]
+
+        # Если вывод включен, объединяем кадры и записываем в поток
+        if ENABLE_OUTPUT:
+            if frames_list:
+                merged_frame = merge_frames(frames_list)  # Объединяем кадры
+                out.write(merged_frame)  # Отправляем в видеопоток
+
+        # Логируем время обработки каждого кадра
         last_processed_time = time.time()
         print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
@@ -295,8 +307,8 @@ async def main():
     #     print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
     # Завершение работы
-    for thread in capture_threads:
-        thread.stop()
+    # for thread in capture_threads:
+    #     thread.stop()
     if ENABLE_OUTPUT:
         out.release()
     cv2.destroyAllWindows()
