@@ -413,7 +413,7 @@ def main():
                     process_frame(i, frame)
 
         last_processed_time = time.time()  # Обновляем таймер
-        print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
+        # print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
     # Завершение работы
     for thread in capture_threads:
