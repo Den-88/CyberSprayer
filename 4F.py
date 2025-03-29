@@ -37,7 +37,7 @@ RTSP_OUTPUT_PIPELINE = (
 )
 
 # Флаг для включения/отключения вывода изображения
-ENABLE_OUTPUT = True  # По умолчанию вывод отключен
+ENABLE_OUTPUT = False  # По умолчанию вывод отключен
 
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
@@ -45,7 +45,7 @@ board = Arduino(ARDUINO_PORT)
 def detect_green(frame):
     """Обнаружение зеленого цвета на кадре или его части."""
 
-    return False, []
+    # return False, []
     if frame is None:
         return False, []  # Если кадра нет, ничего не делать
 
