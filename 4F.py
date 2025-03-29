@@ -152,88 +152,173 @@ def merge_frames(frames):
 
     return merged_frame
 
-def process_frames(frames):
+# def process_frames(frames):
+#     global num_parts, spray_active, spray_end_time, green_detected  # Указываем, что это глобальная переменная
+#
+#     for i, frame in enumerate(frames):
+#         if frame is None:
+#             print("frame is None")
+#             continue
+#
+#         height, width = frame.shape[:2]
+#         part_width = width // num_parts
+#         current_time = time.time()
+#
+#         for j in range(num_parts):
+#             x_start = j * part_width
+#             x_end = (j + 1) * part_width if j < num_parts - 1 else width
+#             part_frame = frame[:, x_start:x_end]
+#
+#             # Анализируем часть кадра
+#             green_detected[i][j], contours = detect_green(part_frame)
+#
+#             # Логика работы форсунки для каждой части
+#             if green_detected[i][j]:
+#                 spray_active[i][j] = True
+#                 spray_end_time[i][j] = current_time + 0.3
+#             elif current_time > spray_end_time[i][j]:
+#                 spray_active[i][j] = False
+#
+#             # Логирование
+#             print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
+#             # Управление Arduino
+#             board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
+#             board.digital[RELAY_PIN_1].write(not spray_active[0][0])  # Реле 1 (левая часть)
+#             board.digital[RELAY_PIN_2].write(not spray_active[0][1])  # Реле 2 (правая часть)
+#             board.digital[RELAY_PIN_3].write(not spray_active[0][2])  # Реле 2 (правая часть)
+#             board.digital[RELAY_PIN_4].write(not spray_active[0][3])  # Реле 2 (правая часть)
+#
+#             if ENABLE_OUTPUT:
+#                 # Отрисовка контуров
+#                 for contour in contours:
+#                     x, y, w, h = cv2.boundingRect(contour)
+#                     cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+#                     area = cv2.contourArea(contour)
+#                     cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+#
+#                 # Рисуем 7 вертикальных белых линий для разделения на 6 частей
+#                 height, width = frame.shape[:2]
+#                 # Количество частей
+#                 num_parts = 6
+#                 # Расстояние между линиями
+#                 line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
+#                 # Добавляем линии с самого левого и правого края
+#                 line_positions = [0] + line_positions + [width]
+#
+#                 # Рисуем линии
+#                 for pos in line_positions:
+#                     cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
+#
+#                 # Добавляем нумерацию сверху
+#                 font = cv2.FONT_HERSHEY_SIMPLEX
+#                 font_scale = 3.5
+#                 font_thickness = 6
+#                 text_color = (0, 0, 255)  # Белый цвет текста
+#                 offset = 100  # Отступ сверху
+#
+#                 for j in range(num_parts):
+#                     # Позиция для текста (центр каждой части)
+#                     x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
+#                     # Текст (номер)
+#                     cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
+#                                 font_thickness)
+#
+#                     # Координаты кружков
+#                     circle1_center = (int(j * width / num_parts) + 50 , 50)  # Первый кружок
+#                     circle2_center = (int(j * width / num_parts) + 50, 100)  # Второй кружок
+#                     radius = 20  # Радиус кружков
+#
+#                     # Цвета кружков
+#                     circle1_color = (0, 255, 0) if green_detected[i][j] else (0, 0, 255)  # Зеленый/красный
+#                     circle2_color = (255, 0, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
+#
+#                     # Рисуем кружки
+#                     cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
+#                     cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
+
+def process_frame(i, frame):
     global num_parts, spray_active, spray_end_time, green_detected  # Указываем, что это глобальная переменная
 
-    for i, frame in enumerate(frames):
-        if frame is None:
-            continue
+    # for i, frame in enumerate(frames):
+    if frame is None:
+        print("frame is None")
+        return
 
-        height, width = frame.shape[:2]
-        part_width = width // num_parts
-        current_time = time.time()
+    height, width = frame.shape[:2]
+    part_width = width // num_parts
+    current_time = time.time()
 
-        for j in range(num_parts):
-            x_start = j * part_width
-            x_end = (j + 1) * part_width if j < num_parts - 1 else width
-            part_frame = frame[:, x_start:x_end]
+    for j in range(num_parts):
+        x_start = j * part_width
+        x_end = (j + 1) * part_width if j < num_parts - 1 else width
+        part_frame = frame[:, x_start:x_end]
 
-            # Анализируем часть кадра
-            green_detected[i][j], contours = detect_green(part_frame)
+        # Анализируем часть кадра
+        green_detected[i][j], contours = detect_green(part_frame)
 
-            # Логика работы форсунки для каждой части
-            if green_detected[i][j]:
-                spray_active[i][j] = True
-                spray_end_time[i][j] = current_time + 0.3
-            elif current_time > spray_end_time[i][j]:
-                spray_active[i][j] = False
+        # Логика работы форсунки для каждой части
+        if green_detected[i][j]:
+            spray_active[i][j] = True
+            spray_end_time[i][j] = current_time + 0.3
+        elif current_time > spray_end_time[i][j]:
+            spray_active[i][j] = False
 
-            # Логирование
-            print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
-            # Управление Arduino
-            board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
-            board.digital[RELAY_PIN_1].write(not spray_active[0][0])  # Реле 1 (левая часть)
-            board.digital[RELAY_PIN_2].write(not spray_active[0][1])  # Реле 2 (правая часть)
-            board.digital[RELAY_PIN_3].write(not spray_active[0][2])  # Реле 2 (правая часть)
-            board.digital[RELAY_PIN_4].write(not spray_active[0][3])  # Реле 2 (правая часть)
+        # Логирование
+        print(f"Camera {i+1} Part {j+1} Detected: {green_detected[i][j]}, Spray: {spray_active[i][j]}")
+        # Управление Arduino
+        board.digital[LED_PIN].write(spray_active[0][4])  # Светодиод
+        board.digital[RELAY_PIN_1].write(not spray_active[0][0])  # Реле 1 (левая часть)
+        board.digital[RELAY_PIN_2].write(not spray_active[0][1])  # Реле 2 (правая часть)
+        board.digital[RELAY_PIN_3].write(not spray_active[0][2])  # Реле 2 (правая часть)
+        board.digital[RELAY_PIN_4].write(not spray_active[0][3])  # Реле 2 (правая часть)
 
-            if ENABLE_OUTPUT:
-                # Отрисовка контуров
-                for contour in contours:
-                    x, y, w, h = cv2.boundingRect(contour)
-                    cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-                    area = cv2.contourArea(contour)
-                    cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        if ENABLE_OUTPUT:
+            # Отрисовка контуров
+            for contour in contours:
+                x, y, w, h = cv2.boundingRect(contour)
+                cv2.rectangle(part_frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                area = cv2.contourArea(contour)
+                cv2.putText(part_frame, f"S = {area}", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-                # Рисуем 7 вертикальных белых линий для разделения на 6 частей
-                height, width = frame.shape[:2]
-                # Количество частей
-                num_parts = 6
-                # Расстояние между линиями
-                line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
-                # Добавляем линии с самого левого и правого края
-                line_positions = [0] + line_positions + [width]
+            # Рисуем 7 вертикальных белых линий для разделения на 6 частей
+            height, width = frame.shape[:2]
+            # Количество частей
+            num_parts = 6
+            # Расстояние между линиями
+            line_positions = [int(i * width / num_parts) for i in range(1, num_parts)]
+            # Добавляем линии с самого левого и правого края
+            line_positions = [0] + line_positions + [width]
 
-                # Рисуем линии
-                for pos in line_positions:
-                    cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
+            # Рисуем линии
+            for pos in line_positions:
+                cv2.line(frame, (pos, 0), (pos, height), (255, 255, 255), 2)
 
-                # Добавляем нумерацию сверху
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 3.5
-                font_thickness = 6
-                text_color = (0, 0, 255)  # Белый цвет текста
-                offset = 100  # Отступ сверху
+            # Добавляем нумерацию сверху
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 3.5
+            font_thickness = 6
+            text_color = (0, 0, 255)  # Белый цвет текста
+            offset = 100  # Отступ сверху
 
-                for j in range(num_parts):
-                    # Позиция для текста (центр каждой части)
-                    x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
-                    # Текст (номер)
-                    cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
-                                font_thickness)
+            for j in range(num_parts):
+                # Позиция для текста (центр каждой части)
+                x_position = int((j * width / num_parts) + (width / num_parts / 2) - 10)
+                # Текст (номер)
+                cv2.putText(frame, str(i * 6 + j + 1), (x_position, offset), font, font_scale, text_color,
+                            font_thickness)
 
-                    # Координаты кружков
-                    circle1_center = (int(j * width / num_parts) + 50 , 50)  # Первый кружок
-                    circle2_center = (int(j * width / num_parts) + 50, 100)  # Второй кружок
-                    radius = 20  # Радиус кружков
+                # Координаты кружков
+                circle1_center = (int(j * width / num_parts) + 50 , 50)  # Первый кружок
+                circle2_center = (int(j * width / num_parts) + 50, 100)  # Второй кружок
+                radius = 20  # Радиус кружков
 
-                    # Цвета кружков
-                    circle1_color = (0, 255, 0) if green_detected[i][j] else (0, 0, 255)  # Зеленый/красный
-                    circle2_color = (255, 0, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
+                # Цвета кружков
+                circle1_color = (0, 255, 0) if green_detected[i][j] else (0, 0, 255)  # Зеленый/красный
+                circle2_color = (255, 0, 0) if spray_active[i][j] else (0, 0, 255)  # Зеленый/красный
 
-                    # Рисуем кружки
-                    cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
-                    cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
+                # Рисуем кружки
+                cv2.circle(frame, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
+                cv2.circle(frame, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
 
 def main():
     """Основная функция программы."""
@@ -262,17 +347,17 @@ def main():
         current_time = time.time()
         if ENABLE_OUTPUT and out:
             frames = []
-            for thread in capture_threads:
+            for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
-                process_frames([frame])
+                process_frame(i, frame)
                 frames.append(frame)
             # Объединяем кадры
             merged_frame = merge_frames(frames)
             out.write(merged_frame)
         else:
-            for thread in capture_threads:
+            for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
-                process_frames([frame])
+                process_frame(i, frame)
 
         last_processed_time = time.time()  # Обновляем таймер
         print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
