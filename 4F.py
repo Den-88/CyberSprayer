@@ -225,41 +225,21 @@ async def capture_frame(rtsp_url):
 
 async def main():
     print("Запуск программы...")
-    """Основная функция программы."""
+
     global running, capture_threads, out
 
+    # Запуск захвата кадров для каждой камеры
     tasks = [capture_frame(rtsp_url) for rtsp_url in RTSP_URLS]
     frames = [asyncio.create_task(task.__anext__()) for task in tasks]
 
-    # capture_threads = [FrameCaptureThread(rtsp) for rtsp in RTSP_URLS]
-    #
-    # # Запускаем захват кадров в асинхронных задачах
-    # tasks = [asyncio.create_task(thread.run()) for thread in capture_threads]
-    # await asyncio.gather(*tasks)
-    #
-    # # for thread in capture_threads:
-    # #     thread.start()
-    #
-    # # Даем время потокам запуститься
-    # time.sleep(2)
-    #
-    # for thread in capture_threads:
-    #     if not thread.cap.isOpened():
-    #         print("Ошибка: невозможно открыть RTSP-поток. Завершаем программу.")
-    #         thread.stop()
-    #         sys.exit(1)
-    #
     # Инициализация RTSP-вывода, если вывод включен
     if ENABLE_OUTPUT:
         out = cv2.VideoWriter(RTSP_OUTPUT_PIPELINE, cv2.CAP_GSTREAMER, 0, 25, (10240 // 4, 1440 // 4), True)
-    #
-    # # Основной цикл обработки кадров
-    # print(f"+++")
 
     while True:
         current_time = time.time()
 
-        # Получаем кадры из RTSP-потоков
+        # Получаем кадры по очереди из каждого RTSP потока
         done, pending = await asyncio.wait(frames, return_when=asyncio.FIRST_COMPLETED)
 
         frames_list = []  # Список для кадров
@@ -267,52 +247,26 @@ async def main():
             frame = task.result()
             if frame is not None:
                 process_frames([frame])  # Обрабатываем кадр
-                frames_list.append(frame)  # Добавляем в список
+                frames_list.append(frame)  # Добавляем кадр в список
 
-        # Перезапускаем ожидание новых кадров
+        # Перезапускаем ожидание новых кадров для каждого потока
         for task in pending:
             task.cancel()
         frames = [asyncio.create_task(task.__anext__()) for task in tasks]
 
-        # Если вывод включен, объединяем кадры и записываем в поток
+        # Если вывод включен, объединяем кадры и записываем их в выходной поток
         if ENABLE_OUTPUT:
             if frames_list:
                 merged_frame = merge_frames(frames_list)  # Объединяем кадры
-                out.write(merged_frame)  # Отправляем в видеопоток
+                out.write(merged_frame)  # Записываем в выходной видеопоток
 
         # Логируем время обработки каждого кадра
         last_processed_time = time.time()
         print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
-    # running = True
-    # while running:
-    #     current_time = time.time()
-    #     if ENABLE_OUTPUT and out:
-    #         frames = []
-    #         for thread in capture_threads:
-    #             print(f"Frame process")
-    #             frame = thread.get_frame()
-    #             process_frames([frame])
-    #             frames.append(frame)
-    #         # Объединяем кадры
-    #         merged_frame = merge_frames(frames)
-    #         out.write(merged_frame)
-    #     else:
-    #         for thread in capture_threads:
-    #             print(f"Frame process")
-    #             frame = thread.get_frame()
-    #             process_frames([frame])
-    #
-    #     last_processed_time = time.time()  # Обновляем таймер
-    #     print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
-
-    # Завершение работы
-    # for thread in capture_threads:
-    #     thread.stop()
     if ENABLE_OUTPUT:
         out.release()
     cv2.destroyAllWindows()
-
 
 if __name__ == "__main__":
     # Обработчик сигнала SIGINT для корректного завершения программы
