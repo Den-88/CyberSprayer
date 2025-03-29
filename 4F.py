@@ -26,6 +26,11 @@ RTSP_URLS = [
     "rtsp://admin:user12345@192.168.1.204:8555/main",  # Камера 4
 ]
 
+num_parts = 6  # Количество частей кадра
+spray_active = [[False] * num_parts for _ in range(len(RTSP_URLS))]
+spray_end_time = [[0] * num_parts for _ in range(len(RTSP_URLS))]
+green_detected = [[False] * num_parts for _ in range(len(RTSP_URLS))]
+
 RTSP_OUTPUT_PIPELINE = (
     "appsrc ! videoconvert ! video/x-raw,format=NV12 ! x264enc tune=zerolatency bitrate=5000 speed-preset=ultrafast key-int-max=30 "
     "! h264parse ! rtspclientsink location=rtsp://127.0.0.1:8554/test"
@@ -121,18 +126,7 @@ def merge_frames(frames):
 
     return merged_frame
 
-spray_active_left = [False] * 4
-spray_end_time_left = [0] * 4
-spray_active_right = [False] * 4
-spray_end_time_right = [0] * 4
-
 def process_frames(frames):
-    num_parts = 6  # Количество частей кадра
-    spray_active = [[False] * num_parts for _ in range(len(RTSP_URLS))]
-    spray_end_time = [[0] * num_parts for _ in range(len(RTSP_URLS))]
-
-    green_detected = [[False] * num_parts for _ in range(len(RTSP_URLS))]
-
     for i, frame in enumerate(frames):
         if frame is None:
             continue
@@ -245,7 +239,8 @@ def main():
         current_time = time.time()
         for thread in capture_threads:
             # process_frames([thread.get_frame()])
-            print(str(thread.get_frame()))
+            # print(str(thread.get_frame()))
+            process_frame([thread.get_frame()])
 
         # frames = [thread.get_frame() for thread in capture_threads]
         # frames = [f for f in frames if f is not None]  # Фильтруем пустые кадры
