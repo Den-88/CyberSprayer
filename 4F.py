@@ -260,7 +260,7 @@ async def main():
         done, pending = await asyncio.wait(frames, return_when=asyncio.FIRST_COMPLETED)
         for task in done:
             frame = task.result()
-            frame = await process_frames([frame])
+            frame = process_frames([frame])
             print("Processed Frame", frame)
         for task in pending:
             task.cancel()
