@@ -32,7 +32,7 @@ RTSP_OUTPUT_PIPELINE = (
 )
 
 # Флаг для включения/отключения вывода изображения
-ENABLE_OUTPUT = False  # По умолчанию вывод отключен
+ENABLE_OUTPUT = True  # По умолчанию вывод отключен
 
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
@@ -90,7 +90,6 @@ class FrameCaptureThread(threading.Thread):
         with self.lock:
             return self.latest_frame  # Просто возвращаем последний доступный кадр
 
-
 def signal_handler(sig, frame):
     """Обработчик сигнала для корректного завершения программы."""
     print("Программа завершена.")
@@ -106,11 +105,9 @@ def signal_handler(sig, frame):
     cv2.destroyAllWindows()  # Закрываем окна OpenCV
     sys.exit(0)  # Выход из программы
 
-
 def resize_frame(frame, width, height):
     """Изменение размера кадра до заданных ширины и высоты."""
     return cv2.resize(frame, (width, height))
-
 
 def merge_frames(frames):
     """Объединение кадров в один (горизонтально)."""
@@ -247,7 +244,8 @@ def main():
     while running:
         current_time = time.time()
         for thread in capture_threads:
-            process_frames([thread.get_frame()])
+            # process_frames([thread.get_frame()])
+            print(str(thread.get_frame()))
 
         # frames = [thread.get_frame() for thread in capture_threads]
         # frames = [f for f in frames if f is not None]  # Фильтруем пустые кадры
