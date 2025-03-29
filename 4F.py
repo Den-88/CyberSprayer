@@ -1,3 +1,4 @@
+import asyncio
 import concurrent
 import threading
 import time
@@ -76,14 +77,15 @@ class FrameCaptureThread(threading.Thread):
         self.running = True
         # self.lock = threading.Lock()  # Блокировка для потокобезопасности
 
-    def run(self):
+    async def run(self):
         """Основной цикл потока для захвата кадров."""
         while self.running:
             ret, frame = self.cap.read()
             if ret:
                 # with self.lock:
                 self.latest_frame = frame  # Сохраняем только последний кадр
-        self.cap.release()
+        # self.cap.release()
+        await asyncio.sleep(0.05)  # Задержка, чтобы не перегружать процессор
 
     def stop(self):
         """Остановка потока."""
