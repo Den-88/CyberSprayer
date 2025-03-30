@@ -65,7 +65,7 @@ def print_cpu_info():
         filled_length = int(bar_length * cpu_load / 100)  # Заполненная часть
         bar = "█" * filled_length + "░" * (bar_length - filled_length)  # Шкала
 
-        sys.stdout.write(f"\033[28H")  # Перемещение к нужной строке
+        sys.stdout.write(f"\033[29H")  # Перемещение к нужной строке
         sys.stdout.write(f"Температура CPU: {cpu_temp}°C")
         sys.stdout.write("\033[0K")  # Очистка до конца строки
         sys.stdout.write(f"\033[30H")  # Перемещение к нужной строке
