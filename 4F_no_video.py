@@ -152,6 +152,7 @@ def update_status(i, j, detected, active, time):
     sys.stdout.write(f"\033[{line_num}H")  # Перемещение к нужной строке
     sys.stdout.write(new_line)
     sys.stdout.write("\033[0K")  # Очистка до конца строки
+    sys.stdout.flush()
 
 
 def detect_green(frame):
