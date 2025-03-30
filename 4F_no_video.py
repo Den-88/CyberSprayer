@@ -63,7 +63,7 @@ def ping_camera(ip):
         if result.returncode == 0:
             # Ищем время пинга в ответе
             match = re.search(r"time=(\d+\.\d+) ms", result.stdout)
-            ping_time = f"{float(match.group(1)):.1f} ms" if match else "N/A"
+            ping_time = f"{float(match.group(1)):.3f} мс" if match else "N/A"
             return f"✅ {ping_time}"
         else:
             return "❌"
@@ -94,9 +94,10 @@ def print_cpu_info():
         sys.stdout.write(f"\033[31H")  # Перемещение к нужной строке
         sys.stdout.write(f"{bar}")
         sys.stdout.write(f"\033[33H")  # Перемещение к строке 32
-        sys.stdout.write("Статус камер: " + " | ".join([f"Камера {i+1}: {status}" for i, status in enumerate(camera_statuses)]))
+        sys.stdout.write("Статус камер: ")
+        sys.stdout.write(f"\033[34H")  # Перемещение к строке 32
+        sys.stdout.write(" | ".join([f"камера {i+1} {status}" for i, status in enumerate(camera_statuses)]))
         sys.stdout.write("\033[0K")  # Очистка до конца строки
-
         sys.stdout.flush()
 
 def clear_screen():
