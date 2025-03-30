@@ -8,6 +8,8 @@ import numpy as np
 from pyfirmata2 import Arduino
 import signal
 import sys
+import psutil  # Для получения информации о температуре процессора и загрузке
+
 
 # Конфигурация Arduino
 ARDUINO_PORT = "/dev/ttyUSB0"  # Порт Arduino
@@ -50,6 +52,28 @@ ENABLE_OUTPUT = False  # По умолчанию вывод отключен
 
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
+
+# Функции для сбора информации о CPU
+def get_cpu_info():
+    """Получаем информацию о температуре процессора и загрузке CPU."""
+    # Получаем температуру процессора
+    temp = psutil.sensors_temperatures().get('cpu_thermal', [])[0].current if psutil.sensors_temperatures() else None
+    if temp is not None:
+        temp = f"{temp:.1f}°C"
+    else:
+        temp = "Не доступна"
+
+    # Получаем загрузку процессора
+    load = psutil.cpu_percent(interval=1)
+
+    return temp, load
+
+def print_cpu_info():
+    """Этот поток будет обновлять данные о CPU каждую секунду."""
+    while running:
+        temp, load = get_cpu_info()
+        print(f"Температура процессора: {temp} | Загрузка CPU: {load}%")
+        time.sleep(1)  # Интервал 1 секунда
 
 def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
@@ -426,6 +450,12 @@ def process_frame(i, frame, start_time):
 
 def main():
     clear_screen()
+
+    # Запускаем поток для получения данных о CPU
+    cpu_thread = threading.Thread(target=print_cpu_info)
+    cpu_thread.daemon = True  # Поток будет завершен при завершении основного
+    cpu_thread.start()
+
     """Основная функция программы."""
     global running, capture_threads, out
 
@@ -466,7 +496,6 @@ def main():
                 else:
                     # print("Кадр не поменялся!")
                     frames.append(previous_frames[i])  # Если кадр не изменился, используем старый
-
             # Объединяем кадры
             merged_frame = merge_frames(frames)
             out.write(merged_frame)
@@ -475,13 +504,6 @@ def main():
             for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
                 process_frame(i, frame, start_time)
-
-                # if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
-                #     previous_frames[i] = frame.copy()
-                #     process_frame(i, frame, start_time)
-
-        last_processed_time = time.time()  # Обновляем таймер
-        # print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
 
     # Завершение работы
     for thread in capture_threads:
