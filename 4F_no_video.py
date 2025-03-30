@@ -8,7 +8,7 @@ import numpy as np
 from pyfirmata2 import Arduino
 import signal
 import sys
-import psutil  # Для получения информации о температуре процессора и загрузке
+# import psutil  # Для получения информации о температуре процессора и загрузке
 
 
 # Конфигурация Arduino
@@ -54,23 +54,23 @@ ENABLE_OUTPUT = False  # По умолчанию вывод отключен
 board = Arduino(ARDUINO_PORT)
 
 # Функции для сбора информации о CPU
-def print_cpu_info():
-    """Получаем информацию о температуре процессора и загрузке CPU."""
-    # Получаем температуру процессора
-    temp = psutil.sensors_temperatures().get('cpu_thermal', [])[0].current if psutil.sensors_temperatures() else None
-    if temp is not None:
-        temp = f"{temp:.1f}°C"
-    else:
-        temp = ""
-
-    # Получаем загрузку процессора
-    load = psutil.cpu_percent(interval=1)
-    # Перемещаем курсор и обновляем строку
-
-    sys.stdout.write(f"\033[29H")  # Перемещение к нужной строке
-    sys.stdout.write(str(load) + "  " + temp)
-    sys.stdout.write("\033[0K")  # Очистка до конца строки
-    sys.stdout.flush()
+# def print_cpu_info():
+#     """Получаем информацию о температуре процессора и загрузке CPU."""
+#     # Получаем температуру процессора
+#     temp = psutil.sensors_temperatures().get('cpu_thermal', [])[0].current if psutil.sensors_temperatures() else None
+#     if temp is not None:
+#         temp = f"{temp:.1f}°C"
+#     else:
+#         temp = ""
+#
+#     # Получаем загрузку процессора
+#     load = psutil.cpu_percent(interval=1)
+#     # Перемещаем курсор и обновляем строку
+#
+#     sys.stdout.write(f"\033[29H")  # Перемещение к нужной строке
+#     sys.stdout.write(str(load) + "  " + temp)
+#     sys.stdout.write("\033[0K")  # Очистка до конца строки
+#     sys.stdout.flush()
 
 def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
