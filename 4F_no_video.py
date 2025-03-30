@@ -144,7 +144,6 @@ def detect_green(frame):
     # Уменьшаем размер кадра (ускоряет обработку)
     frame = cv2.resize(frame, (frame.shape[1] // 4, frame.shape[0] // 4))
 
-
     # Преобразуем кадр в HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     lower_green = np.array([35, 30, 40])  # Нижняя граница зеленого
