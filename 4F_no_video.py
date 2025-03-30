@@ -1,5 +1,6 @@
 import concurrent
 import os
+import subprocess
 import threading
 import time
 
@@ -53,6 +54,14 @@ ENABLE_OUTPUT = False  # По умолчанию вывод отключен
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
 
+CAMERA_IPS = [url.split("@")[-1].split(":")[0] for url in RTSP_URLS]  # Извлекаем IP-адреса камер
+def ping_camera(ip):
+    """Проверяет доступность камеры по ICMP (ping)."""
+    try:
+        result = subprocess.run(["ping", "-c", "1", "-W", "1", ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return "✅" if result.returncode == 0 else "❌"
+    except Exception:
+        return "❌"
 # Функции для сбора информации о CPU
 def print_cpu_info():
     """Функция для периодического вывода информации о CPU."""
@@ -65,6 +74,9 @@ def print_cpu_info():
         filled_length = int(bar_length * cpu_load / 100)  # Заполненная часть
         bar = "█" * filled_length + "░" * (bar_length - filled_length)  # Шкала
 
+        # Проверяем доступность камер
+        camera_statuses = [ping_camera(ip) for ip in CAMERA_IPS]
+
         sys.stdout.write(f"\033[29H")  # Перемещение к нужной строке
         sys.stdout.write(f"Температура CPU: {cpu_temp}°C")
         sys.stdout.write("\033[0K")  # Очистка до конца строки
@@ -73,6 +85,10 @@ def print_cpu_info():
         sys.stdout.write("\033[0K")  # Очистка до конца строки
         sys.stdout.write(f"\033[31H")  # Перемещение к нужной строке
         sys.stdout.write(f"{bar}")
+        sys.stdout.write(f"\033[33H")  # Перемещение к строке 32
+        sys.stdout.write("Статус камер: " + " | ".join([f"Кам {i+1}: {status}" for i, status in enumerate(camera_statuses)]))
+        sys.stdout.write("\033[0K")  # Очистка до конца строки
+
         sys.stdout.flush()
 
 def clear_screen():
