@@ -142,7 +142,7 @@ def detect_green(frame):
         return False, []  # Если кадра нет, ничего не делать
 
     # Уменьшаем размер кадра (ускоряет обработку)
-    frame = cv2.resize(frame, (frame.shape[1] // 4, frame.shape[0] // 4))
+    # frame = cv2.resize(frame, (frame.shape[1] // 4, frame.shape[0] // 4))
 
     # Преобразуем кадр в HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
