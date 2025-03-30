@@ -162,12 +162,11 @@ def detect_green(frame):
         # Возвращаем результат и отфильтрованные контуры
         return len(filtered_contours) > 0, filtered_contours
     else:
-        # Находим контуры зеленых объектов
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        # Проверяем хотя бы один контур, удовлетворяющий условию, и сразу возвращаем True
-        for cnt in contours:
-            if cv2.contourArea(cnt) > MIN_OBJECT_AREA:
-                return True, []  # Ранний выход при первом подходящем контуре
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
+        # Проверяем, есть ли хотя бы один объект с площадью > MIN_OBJECT_AREA
+        for i in range(1, num_labels):  # Начинаем с 1, так как 0 – это фон
+            if stats[i, cv2.CC_STAT_AREA] > MIN_OBJECT_AREA:
+                return True, []  # Если найден хотя бы один объект, сразу возвращаем True
         return False, []
 
         # # Проверяем количество зеленых пикселей
