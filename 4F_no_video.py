@@ -170,8 +170,8 @@ def detect_green(frame):
         #     return False, []
 
         MIN_GREEN_RATIO = 0.02  # 2% пикселей должны быть зелёными для детекции
-        # Проверяем долю зелёных пикселей
-        green_ratio = cv2.countNonZero(mask) / mask.size
+        # Быстрая проверка количества зелёных пикселей через NumPy
+        green_ratio = np.sum(mask > 0) / mask.size  # np.sum быстрее, чем countNonZero!
         # Если зелёного достаточно, возвращаем True
         if green_ratio >= MIN_GREEN_RATIO:
             return True, []
