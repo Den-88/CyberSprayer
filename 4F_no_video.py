@@ -60,11 +60,17 @@ def print_cpu_info():
         cpu_temp = psutil.sensors_temperatures().get('cpu_thermal', [])[0].current if psutil.sensors_temperatures() else None
         cpu_load = psutil.cpu_percent(interval=1)  # Получаем загрузку CPU
 
+        # Создаем шкалу загрузки
+        bar_length = 30  # Длина шкалы
+        filled_length = int(bar_length * cpu_load / 100)  # Заполненная часть
+        bar = "█" * filled_length + "░" * (bar_length - filled_length)  # Шкала
+
         sys.stdout.write(f"\033[28H")  # Перемещение к нужной строке
         sys.stdout.write(f"Температура CPU: {cpu_temp}°C")
         sys.stdout.write("\033[0K")  # Очистка до конца строки
-        sys.stdout.write(f"\033[29H")  # Перемещение к нужной строке
-        sys.stdout.write(f"Загрузка CPU: {cpu_load}%")
+        sys.stdout.write(f"\033[30H")  # Перемещение к нужной строке
+        # sys.stdout.write(f"Загрузка CPU: {cpu_load}%")
+        sys.stdout.write(f"Загрузка CPU: {cpu_load}% [{bar}]  | Температура: {cpu_temp}°C")
         sys.stdout.write("\033[0K")  # Очистка до конца строки
         sys.stdout.flush()
 
