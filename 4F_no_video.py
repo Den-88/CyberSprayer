@@ -170,8 +170,8 @@ def detect_green(frame):
         # return False, []
 
         # Проверяем количество зеленых пикселей
-        if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
-        # if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
+        # if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
+        if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
             return True, []
         else:
             return False, []
