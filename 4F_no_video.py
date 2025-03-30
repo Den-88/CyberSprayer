@@ -64,7 +64,7 @@ def print_cpu_info():
         temp = ""
 
     # Получаем загрузку процессора
-    load = psutil.cpu_percent()
+    load = psutil.cpu_percent(interval=1)
     # Перемещаем курсор и обновляем строку
 
     sys.stdout.write(f"\033[29H")  # Перемещение к нужной строке
@@ -454,10 +454,10 @@ def main():
     for thread in capture_threads:
         thread.start()
 
-    # Запускаем поток для получения данных о CPU
-    cpu_thread = threading.Thread(target=print_cpu_info)
-    cpu_thread.daemon = True  # Поток будет завершен при завершении основного
-    cpu_thread.start()
+    # # Запускаем поток для получения данных о CPU
+    # cpu_thread = threading.Thread(target=print_cpu_info)
+    # cpu_thread.daemon = True  # Поток будет завершен при завершении основного
+    # cpu_thread.start()
 
     # Даем время потокам запуститься
     time.sleep(2)
