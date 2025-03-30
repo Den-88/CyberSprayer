@@ -200,7 +200,7 @@ class FrameCaptureThread(threading.Thread):
             ret, frame = self.cap.read()
             if ret:
                 self.latest_frame = frame  # Сохраняем только последний кадр
-            # time.sleep(self.sleep_interval)  # Добавляем задержку, чтобы не перегружать процессор
+            time.sleep(self.sleep_interval)  # Добавляем задержку, чтобы не перегружать процессор
         self.cap.release()
 
     def stop(self):
