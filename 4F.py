@@ -333,7 +333,7 @@ def process_frame(i, frame, start_time):
     # for i, frame in enumerate(frames):
     if frame is None:
         print("frame is None")
-        return
+        return None
 
     height, width = frame.shape[:2]
     part_width = width // num_parts
@@ -417,7 +417,10 @@ def process_frame(i, frame, start_time):
                 cv2.circle(frame_copy, circle1_center, radius, circle1_color, -1)  # -1 делает круг залитым
                 cv2.circle(frame_copy, circle2_center, radius, circle2_color, -1 if spray_active[i][j] else 0)
 
-    return frame_copy
+    if ENABLE_OUTPUT:
+        return frame_copy
+    return None
+
 
 def main():
     clear_screen()
