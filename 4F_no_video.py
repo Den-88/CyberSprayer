@@ -64,7 +64,7 @@ def get_cpu_info():
         temp = "Не доступна"
 
     # Получаем загрузку процессора
-    load = psutil.cpu_percent(interval=1)
+    load = psutil.cpu_percent()
 
     return temp, load
 
