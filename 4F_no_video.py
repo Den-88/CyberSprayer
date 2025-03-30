@@ -150,7 +150,7 @@ def update_status(i, j, detected, active, time):
     sys.stdout.write("\033[0K")  # Очистка до конца строки
 
     sys.stdout.write(f"\033[33H")  # Перемещение к нужной строке
-    sys.stdout.write(get_cpu_info())
+    sys.stdout.write(str(get_cpu_info()))
     sys.stdout.write("\033[0K")  # Очистка до конца строки
 
     sys.stdout.flush()
