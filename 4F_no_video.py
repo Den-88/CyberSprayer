@@ -19,7 +19,7 @@ RELAY_PIN_4 = 5                # Пин для реле 2 (правая част
 
 # Минимальная площадь объекта для обнаружения (в пикселях)
 MIN_OBJECT_AREA = 800 # 150 было
-MIN_GREEN_PIXELS = 800
+MIN_GREEN_PIXELS = 1400
 
 # Настройки RTSP
 RTSP_URLS = [
