@@ -158,13 +158,22 @@ def detect_green(frame):
         # Возвращаем результат и отфильтрованные контуры
         return len(filtered_contours) > 0, filtered_contours
     else:
-        # Создаем маску
-        mask = cv2.inRange(hsv, lower_green, upper_green)
-        # Проверяем количество зеленых пикселей
-        if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
-            return True, []
-        else:
-            return False, []
+        # # Создаем маску
+        # mask = cv2.inRange(hsv, lower_green, upper_green)
+        # # Проверяем количество зеленых пикселей
+        # if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
+        #     return True, []
+        # else:
+        #     return False, []
+        # Используем итератор, чтобы проверять пиксели по мере обработки
+        green_count = 0
+        for pixel in np.nditer(mask):
+            if pixel > 0:  # Если пиксель зелёный
+                green_count += 1
+                if green_count >= MIN_GREEN_PIXELS:
+                    return True, []  # Достигли порога, сразу возвращаем True
+        return False, []  # Если не набрали нужное количество пикселей
+
 
 class FrameCaptureThread(threading.Thread):
     """Поток для захвата кадров из RTSP-потока."""
