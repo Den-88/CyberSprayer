@@ -69,9 +69,10 @@ def print_cpu_info():
         sys.stdout.write(f"Температура CPU: {cpu_temp}°C")
         sys.stdout.write("\033[0K")  # Очистка до конца строки
         sys.stdout.write(f"\033[30H")  # Перемещение к нужной строке
-        # sys.stdout.write(f"Загрузка CPU: {cpu_load}%")
-        sys.stdout.write(f"Загрузка CPU: {cpu_load}% [{bar}]  | Температура: {cpu_temp}°C")
+        sys.stdout.write(f"Загрузка CPU: {cpu_load}%")
         sys.stdout.write("\033[0K")  # Очистка до конца строки
+        sys.stdout.write(f"\034[30H")  # Перемещение к нужной строке
+        sys.stdout.write(f"{bar}")
         sys.stdout.flush()
 
 def clear_screen():
