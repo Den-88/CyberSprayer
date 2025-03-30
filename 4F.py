@@ -472,11 +472,11 @@ def main():
         else:
             for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
-                process_frame(i, frame, start_time)
+                # process_frame(i, frame, start_time)
 
-                # if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
-                #     previous_frames[i] = frame.copy()
-                #     process_frame(i, frame, start_time)
+                if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
+                    previous_frames[i] = frame.copy()
+                    process_frame(i, frame, start_time)
 
         last_processed_time = time.time()  # Обновляем таймер
         # print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
