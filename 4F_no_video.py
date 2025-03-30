@@ -67,7 +67,7 @@ def print_cpu_info():
     load = psutil.cpu_percent(interval=1)
 
     sys.stdout.write(f"\028[33H")  # Перемещение к нужной строке
-    sys.stdout.write(str(temp, load))
+    sys.stdout.write(str(load) + "  " + temp)
     sys.stdout.write("\033[0K")  # Очистка до конца строки
     sys.stdout.flush()
 
