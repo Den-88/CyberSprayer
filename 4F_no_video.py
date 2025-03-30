@@ -70,7 +70,7 @@ def get_cpu_info():
 
 def print_cpu_info():
     """Этот поток будет обновлять данные о CPU каждую секунду."""
-    while running:
+    while True:
         temp, load = get_cpu_info()
         print(f"Температура процессора: {temp} | Загрузка CPU: {load}%")
         time.sleep(1)  # Интервал 1 секунда
