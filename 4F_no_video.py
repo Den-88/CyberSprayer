@@ -146,10 +146,10 @@ def detect_green(frame):
 
     # Преобразуем кадр в HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 30, 40])  # Нижняя граница зеленого
-    upper_green = np.array([85, 255, 255])  # Верхняя граница зеленого
-    # lower_green = np.array([35, 30, 40], dtype=np.uint8)
-    # upper_green = np.array([85, 255, 255], dtype=np.uint8)
+    # lower_green = np.array([35, 30, 40])  # Нижняя граница зеленого
+    # upper_green = np.array([85, 255, 255])  # Верхняя граница зеленого
+    lower_green = np.array([35, 30, 40], dtype=np.uint8)
+    upper_green = np.array([85, 255, 255], dtype=np.uint8)
 
     # Создаем маску для зеленого цвета
     mask = cv2.inRange(hsv, lower_green, upper_green)
@@ -162,12 +162,20 @@ def detect_green(frame):
         # Возвращаем результат и отфильтрованные контуры
         return len(filtered_contours) > 0, filtered_contours
     else:
-        # Проверяем количество зеленых пикселей
-        if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
-        # if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
-            return True, []
-        else:
-            return False, []
+        # Находим контуры зеленых объектов
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Проверяем хотя бы один контур, удовлетворяющий условию, и сразу возвращаем True
+        for cnt in contours:
+            if cv2.contourArea(cnt) > MIN_OBJECT_AREA:
+                return True, []  # Ранний выход при первом подходящем контуре
+        return False, []
+
+        # # Проверяем количество зеленых пикселей
+        # if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
+        # # if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
+        #     return True, []
+        # else:
+        #     return False, []
 
         # # Преобразуем маску в одномерный массив и проверяем частями
         # flat_mask = mask.ravel()
