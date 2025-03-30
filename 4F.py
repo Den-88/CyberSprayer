@@ -45,7 +45,7 @@ RTSP_OUTPUT_PIPELINE = (
 )
 
 # Флаг для включения/отключения вывода изображения
-ENABLE_OUTPUT = True  # По умолчанию вывод отключен
+ENABLE_OUTPUT = False  # По умолчанию вывод отключен
 
 # Инициализация Arduino
 board = Arduino(ARDUINO_PORT)
@@ -469,10 +469,11 @@ def main():
         else:
             for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
+                process_frame(i, frame, start_time)
 
-                if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
-                    previous_frames[i] = frame.copy()
-                    process_frame(i, frame, start_time)
+                # if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
+                #     previous_frames[i] = frame.copy()
+                #     process_frame(i, frame, start_time)
 
         last_processed_time = time.time()  # Обновляем таймер
         # print(f"Frame processed in {last_processed_time - current_time:.4f} seconds")
