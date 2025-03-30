@@ -68,13 +68,6 @@ def get_cpu_info():
 
     return temp, load
 
-def print_cpu_info():
-    """Этот поток будет обновлять данные о CPU каждую секунду."""
-    while True:
-        temp, load = get_cpu_info()
-        print(f"Температура процессора: {temp} | Загрузка CPU: {load}%")
-        time.sleep(1)  # Интервал 1 секунда
-
 def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
     os.system('cls' if os.name == 'nt' else 'clear')  # Windows или Unix/Linux
@@ -155,6 +148,11 @@ def update_status(i, j, detected, active, time):
     sys.stdout.write(f"\033[{line_num}H")  # Перемещение к нужной строке
     sys.stdout.write(new_line)
     sys.stdout.write("\033[0K")  # Очистка до конца строки
+
+    sys.stdout.write(f"\033[33H")  # Перемещение к нужной строке
+    sys.stdout.write(get_cpu_info())
+    sys.stdout.write("\033[0K")  # Очистка до конца строки
+
     sys.stdout.flush()
 
 
@@ -450,11 +448,6 @@ def process_frame(i, frame, start_time):
 
 def main():
     clear_screen()
-
-    # Запускаем поток для получения данных о CPU
-    cpu_thread = threading.Thread(target=print_cpu_info)
-    cpu_thread.daemon = True  # Поток будет завершен при завершении основного
-    cpu_thread.start()
 
     """Основная функция программы."""
     global running, capture_threads, out
