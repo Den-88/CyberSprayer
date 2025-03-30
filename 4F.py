@@ -472,7 +472,7 @@ def main():
         else:
             for i, thread in enumerate(capture_threads):
                 frame = thread.get_frame()
-                # process_frame(i, frame, start_time)
+                process_frame(i, frame, start_time)
 
                 # if previous_frames[i] is None or not np.array_equal(previous_frames[i], frame):
                 #     previous_frames[i] = frame.copy()
