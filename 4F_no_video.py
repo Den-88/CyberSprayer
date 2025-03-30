@@ -71,7 +71,7 @@ def print_cpu_info():
         sys.stdout.write(f"\033[30H")  # Перемещение к нужной строке
         sys.stdout.write(f"Загрузка CPU: {cpu_load}%")
         sys.stdout.write("\033[0K")  # Очистка до конца строки
-        sys.stdout.write(f"\033[30H")  # Перемещение к нужной строке
+        sys.stdout.write(f"\033[31H")  # Перемещение к нужной строке
         sys.stdout.write(f"{bar}")
         sys.stdout.flush()
 
