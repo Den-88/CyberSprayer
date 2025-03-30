@@ -152,40 +152,33 @@ def detect_green(frame):
     # Создаем маску для зеленого цвета
     mask = cv2.inRange(hsv, lower_green, upper_green)
 
-    # Находим контуры зеленых объектов
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # Фильтруем контуры по минимальной площади
-    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_OBJECT_AREA]
-    # Возвращаем результат и отфильтрованные контуры
-    return len(filtered_contours) > 0, filtered_contours
-
-    # if ENABLE_OUTPUT:
-    #     # Находим контуры зеленых объектов
-    #     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    #     # Фильтруем контуры по минимальной площади
-    #     filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_OBJECT_AREA]
-    #     # Возвращаем результат и отфильтрованные контуры
-    #     return len(filtered_contours) > 0, filtered_contours
-    # else:
-    #     # Создаем маску
-    #     mask = cv2.inRange(hsv, lower_green, upper_green)
-    #     # Проверяем количество зеленых пикселей
-    #     if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
-    #     # if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
-    #         return True, []
-    #     else:
-    #         return False, []
+    if ENABLE_OUTPUT:
+        # Находим контуры зеленых объектов
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Фильтруем контуры по минимальной площади
+        filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_OBJECT_AREA]
+        # Возвращаем результат и отфильтрованные контуры
+        return len(filtered_contours) > 0, filtered_contours
+    else:
+        # Создаем маску
+        mask = cv2.inRange(hsv, lower_green, upper_green)
+        # Проверяем количество зеленых пикселей
+        if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
+        # if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
+            return True, []
+        else:
+            return False, []
 
 
-        # # Преобразуем маску в одномерный массив и проверяем частями
-        # flat_mask = mask.ravel()
-        # # Используем быструю итерацию с ранним выходом
-        # green_count = 0
-        # for i in range(0, len(flat_mask), 10000):  # Читаем по 1000 пикселей за раз
-        #     green_count += np.count_nonzero(flat_mask[i:i + 10000])
-        #     if green_count >= MIN_GREEN_PIXELS:
-        #         return True, []  # Достигли порога, выходим сразу
-        # return False, []  # Недостаточно зелёного
+        # Преобразуем маску в одномерный массив и проверяем частями
+        flat_mask = mask.ravel()
+        # Используем быструю итерацию с ранним выходом
+        green_count = 0
+        for i in range(0, len(flat_mask), 10000):  # Читаем по 1000 пикселей за раз
+            green_count += np.count_nonzero(flat_mask[i:i + 10000])
+            if green_count >= MIN_GREEN_PIXELS:
+                return True, []  # Достигли порога, выходим сразу
+        return False, []  # Недостаточно зелёного
 
 
 class FrameCaptureThread(threading.Thread):
