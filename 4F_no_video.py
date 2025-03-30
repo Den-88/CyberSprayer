@@ -169,22 +169,22 @@ def detect_green(frame):
         #         return True, []  # Если найден хотя бы один объект, сразу возвращаем True
         # return False, []
 
-        # # Проверяем количество зеленых пикселей
-        # if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
-        # # if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
-        #     return True, []
-        # else:
-        #     return False, []
+        # Проверяем количество зеленых пикселей
+        if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
+        # if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
+            return True, []
+        else:
+            return False, []
 
-        # Преобразуем маску в одномерный массив и проверяем частями
-        flat_mask = mask.ravel()
-        # Используем быструю итерацию с ранним выходом
-        green_count = 0
-        for i in range(0, len(flat_mask), 10000):  # Читаем по 1000 пикселей за раз
-            green_count += np.count_nonzero(flat_mask[i:i + 10000])
-            if green_count >= MIN_GREEN_PIXELS:
-                return True, []  # Достигли порога, выходим сразу
-        return False, []  # Недостаточно зелёного
+        # # Преобразуем маску в одномерный массив и проверяем частями
+        # flat_mask = mask.ravel()
+        # # Используем быструю итерацию с ранним выходом
+        # green_count = 0
+        # for i in range(0, len(flat_mask), 10000):  # Читаем по 1000 пикселей за раз
+        #     green_count += np.count_nonzero(flat_mask[i:i + 10000])
+        #     if green_count >= MIN_GREEN_PIXELS:
+        #         return True, []  # Достигли порога, выходим сразу
+        # return False, []  # Недостаточно зелёного
 
 
 class FrameCaptureThread(threading.Thread):
