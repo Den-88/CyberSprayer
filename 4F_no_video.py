@@ -169,14 +169,16 @@ def detect_green(frame):
         # else:
         #     return False, []
 
-        MIN_GREEN_RATIO = 0.02  # 2% пикселей должны быть зелёными для детекции
-        # Быстрая проверка количества зелёных пикселей через NumPy
-        green_ratio = np.sum(mask > 0) / mask.size  # np.sum быстрее, чем countNonZero!
-        # Если зелёного достаточно, возвращаем True
-        if green_ratio >= MIN_GREEN_RATIO:
-            return True, []
-        else:
-            return False, []
+
+        # Преобразуем маску в одномерный массив и проверяем частями
+        flat_mask = mask.ravel()
+        # Используем быструю итерацию с ранним выходом
+        green_count = 0
+        for i in range(0, len(flat_mask), 1000):  # Читаем по 1000 пикселей за раз
+            green_count += np.count_nonzero(flat_mask[i:i + 1000])
+            if green_count >= MIN_GREEN_PIXELS:
+                return True, []  # Достигли порога, выходим сразу
+        return False, []  # Недостаточно зелёного
 
 
 class FrameCaptureThread(threading.Thread):
