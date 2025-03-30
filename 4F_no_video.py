@@ -144,8 +144,10 @@ def detect_green(frame):
 
     # Преобразуем кадр в HSV
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 30, 40])  # Нижняя граница зеленого
-    upper_green = np.array([85, 255, 255])  # Верхняя граница зеленого
+    # lower_green = np.array([35, 30, 40])  # Нижняя граница зеленого
+    # upper_green = np.array([85, 255, 255])  # Верхняя граница зеленого
+    lower_green = np.array([35, 30, 40], dtype=np.uint8)
+    upper_green = np.array([85, 255, 255], dtype=np.uint8)
 
     # Создаем маску для зеленого цвета
     mask = cv2.inRange(hsv, lower_green, upper_green)
@@ -161,6 +163,7 @@ def detect_green(frame):
         # Создаем маску
         mask = cv2.inRange(hsv, lower_green, upper_green)
         # Проверяем количество зеленых пикселей
+        # if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
         if cv2.countNonZero(mask) > MIN_GREEN_PIXELS:
             return True, []
         else:
