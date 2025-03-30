@@ -19,6 +19,7 @@ RELAY_PIN_4 = 5                # Пин для реле 2 (правая част
 
 # Минимальная площадь объекта для обнаружения (в пикселях)
 MIN_OBJECT_AREA = 800 # 150 было
+MIN_GREEN_PIXELS = 800
 
 # Настройки RTSP
 RTSP_URLS = [
@@ -149,15 +150,21 @@ def detect_green(frame):
     # Создаем маску для зеленого цвета
     mask = cv2.inRange(hsv, lower_green, upper_green)
 
-    # Находим контуры зеленых объектов
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-    # Фильтруем контуры по минимальной площади
-    filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_OBJECT_AREA]
-
-    # Возвращаем результат и отфильтрованные контуры
-    return len(filtered_contours) > 0, filtered_contours
-
+    if ENABLE_OUTPUT:
+        # Находим контуры зеленых объектов
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        # Фильтруем контуры по минимальной площади
+        filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) > MIN_OBJECT_AREA]
+        # Возвращаем результат и отфильтрованные контуры
+        return len(filtered_contours) > 0, filtered_contours
+    else:
+        # Создаем маску
+        mask = cv2.inRange(hsv, lower_green, upper_green)
+        # Проверяем количество зеленых пикселей
+        if np.count_nonzero(mask) > MIN_GREEN_PIXELS:
+            return True, []
+        else:
+            return False, []
 
 class FrameCaptureThread(threading.Thread):
     """Поток для захвата кадров из RTSP-потока."""
