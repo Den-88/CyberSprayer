@@ -94,9 +94,9 @@ def print_cpu_info():
         sys.stdout.write(f"\033[31H")  # Перемещение к нужной строке
         sys.stdout.write(f"{bar}")
         sys.stdout.write(f"\033[33H")  # Перемещение к строке 32
-        sys.stdout.write("Статус камер: ")
+        sys.stdout.write(" | ".join([f"камера {i+1}" for i, status in enumerate(camera_statuses)]))
         sys.stdout.write(f"\033[34H")  # Перемещение к строке 32
-        sys.stdout.write(" | ".join([f"камера {i+1} {status}" for i, status in enumerate(camera_statuses)]))
+        sys.stdout.write(" | ".join([f"{status}" for i, status in enumerate(camera_statuses)]))
         sys.stdout.write("\033[0K")  # Очистка до конца строки
         sys.stdout.flush()
 
