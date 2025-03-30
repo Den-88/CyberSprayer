@@ -65,8 +65,9 @@ def print_cpu_info():
 
     # Получаем загрузку процессора
     load = psutil.cpu_percent(interval=1)
+    # Перемещаем курсор и обновляем строку
 
-    sys.stdout.write(f"\028[33H")  # Перемещение к нужной строке
+    sys.stdout.write(f"\033[29H")  # Перемещение к нужной строке
     sys.stdout.write(str(load) + "  " + temp)
     sys.stdout.write("\033[0K")  # Очистка до конца строки
     sys.stdout.flush()
