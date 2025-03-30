@@ -174,8 +174,8 @@ def detect_green(frame):
         flat_mask = mask.ravel()
         # Используем быструю итерацию с ранним выходом
         green_count = 0
-        for i in range(0, len(flat_mask), 1000):  # Читаем по 1000 пикселей за раз
-            green_count += np.count_nonzero(flat_mask[i:i + 1000])
+        for i in range(0, len(flat_mask), 10000):  # Читаем по 1000 пикселей за раз
+            green_count += np.count_nonzero(flat_mask[i:i + 10000])
             if green_count >= MIN_GREEN_PIXELS:
                 return True, []  # Достигли порога, выходим сразу
         return False, []  # Недостаточно зелёного
