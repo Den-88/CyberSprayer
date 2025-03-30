@@ -54,19 +54,22 @@ ENABLE_OUTPUT = False  # По умолчанию вывод отключен
 board = Arduino(ARDUINO_PORT)
 
 # Функции для сбора информации о CPU
-def get_cpu_info():
+def print_cpu_info():
     """Получаем информацию о температуре процессора и загрузке CPU."""
     # Получаем температуру процессора
     temp = psutil.sensors_temperatures().get('cpu_thermal', [])[0].current if psutil.sensors_temperatures() else None
     if temp is not None:
         temp = f"{temp:.1f}°C"
     else:
-        temp = "Не доступна"
+        temp = ""
 
     # Получаем загрузку процессора
-    load = psutil.cpu_percent()
+    load = psutil.cpu_percent(interval=1)
 
-    return temp, load
+    sys.stdout.write(f"\028[33H")  # Перемещение к нужной строке
+    sys.stdout.write(str(temp, load))
+    sys.stdout.write("\033[0K")  # Очистка до конца строки
+    sys.stdout.flush()
 
 def clear_screen():
     """Очистка экрана перед выводом обновленных данных."""
@@ -148,12 +151,6 @@ def update_status(i, j, detected, active, time):
     sys.stdout.write(f"\033[{line_num}H")  # Перемещение к нужной строке
     sys.stdout.write(new_line)
     sys.stdout.write("\033[0K")  # Очистка до конца строки
-
-    sys.stdout.write(f"\033[33H")  # Перемещение к нужной строке
-    sys.stdout.write(str(get_cpu_info()))
-    sys.stdout.write("\033[0K")  # Очистка до конца строки
-
-    sys.stdout.flush()
 
 
 def detect_green(frame):
@@ -455,6 +452,11 @@ def main():
     capture_threads = [FrameCaptureThread(rtsp) for rtsp in RTSP_URLS]
     for thread in capture_threads:
         thread.start()
+
+    # Запускаем поток для получения данных о CPU
+    cpu_thread = threading.Thread(target=print_cpu_info)
+    cpu_thread.daemon = True  # Поток будет завершен при завершении основного
+    cpu_thread.start()
 
     # Даем время потокам запуститься
     time.sleep(2)
